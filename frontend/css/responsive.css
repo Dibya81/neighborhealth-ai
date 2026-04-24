@@ -100,9 +100,11 @@ html { -webkit-text-size-adjust: 100%; }
     background: none;
     border: none;
     backdrop-filter: none;
+    z-index: 2000 !important; /* Ensure buttons are above everything */
+    pointer-events: auto !important;
   }
 
-  .fab { width: 44px; height: 44px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+  .fab { width: 44px; height: 44px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); pointer-events: auto !important; cursor: pointer !important; }
 
   /* Fab labels: appear above on tablet */
   .fab-label {

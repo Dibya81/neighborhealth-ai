@@ -163,6 +163,15 @@ window.mapComponent = (function() {
   }
 
   async function init() {
+    // Wire up Layers button immediately
+    const layerBtn = document.getElementById('fab-layers');
+    if (layerBtn) {
+      layerBtn.addEventListener('click', () => {
+        console.log('[UI] Toggle map style clicked');
+        toggleMapStyle();
+      });
+    }
+
     // Init Leaflet
     _map = L.map('map', {
       center: C.BENGALURU_CENTER,
@@ -214,12 +223,6 @@ window.mapComponent = (function() {
       }
     } catch (_) {
       _loadFallbackOutline();
-    }
-
-    // Wire up Layers button
-    const layerBtn = document.getElementById('fab-layers');
-    if (layerBtn) {
-      layerBtn.addEventListener('click', toggleMapStyle);
     }
 
     return _map;

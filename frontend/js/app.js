@@ -759,6 +759,6 @@ const DISEASES = [
 
   // ── HEALTH CHECK REDIRECT ───────────────────────────────────────────────
   document.getElementById("btn-health-check")?.addEventListener("click", () => {
-    window.location.href = "/health-check/index.html";
+    window.location.href = "health-check/index.html";
   });
 })();
