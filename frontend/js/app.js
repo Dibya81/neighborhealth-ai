@@ -20,7 +20,7 @@ const DISEASES = [
 
 window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.classList.remove('hidden');
 
-(async function() {
+(async function () {
   // ── MANDATORY AUTH GUARD (Disabled for testing) ──────────────────────
   const savedUserRaw = localStorage.getItem('neighborhealth_user');
   if (!savedUserRaw && !window.location.pathname.includes('login.html')) {
@@ -45,11 +45,11 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
         const btnSignIn = document.getElementById('btn-signin');
         const profileBtn = document.getElementById('profile-btn');
         const userDisplayName = document.getElementById('user-display-name');
-        
+
         if (btnSignIn && profileBtn && userDisplayName) {
-            btnSignIn.classList.add('hidden');
-            profileBtn.classList.remove('hidden');
-            userDisplayName.textContent = savedUser.name || 'Friend';
+          btnSignIn.classList.add('hidden');
+          profileBtn.classList.remove('hidden');
+          userDisplayName.textContent = savedUser.name || 'Friend';
         }
       }
     } catch (e) {
@@ -81,7 +81,7 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     // ── 3. Initial Disease State ─────────────────────────────────────
     store.set('currentDisease', 'dengue');
     _renderGlobalDiseasePills();
-    
+
     // We await the first disease load, but with a timeout catch
     try {
       await switchDisease('dengue');
@@ -103,22 +103,22 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     try {
       store.set('currentDisease', diseaseId);
       _renderGlobalDiseasePills();
-      
+
       let resp;
       try {
         resp = await api.getAllRiskScores(diseaseId);
       } catch (reqErr) {
         if (reqErr.message.includes('404')) {
-           // Graceful handle for empty DB
-           store.set('allRiskScores', {});
-           mapComponent.refreshColors();
-           summaryComponent.render({});
-           toast.show(`No live data found for ${diseaseId} today.`, 'info');
-           return;
+          // Graceful handle for empty DB
+          store.set('allRiskScores', {});
+          mapComponent.refreshColors();
+          summaryComponent.render({});
+          toast.show(`No live data found for ${diseaseId} today.`, 'info');
+          return;
         }
         throw reqErr;
       }
-      
+
       if (!resp || !resp.wards || resp.wards.length === 0) {
         throw new Error(`Invalid response for ${diseaseId}`);
       }
@@ -131,7 +131,7 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
       store.set('allRiskScores', scoresMap);
       mapComponent.refreshColors();
       summaryComponent.render(scoresMap);
-      
+
       const selWardId = store.get('selectedWardId');
       if (selWardId) panelComponent.open(selWardId);
 
@@ -149,10 +149,10 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
   function _renderGlobalDiseasePills() {
     const container = document.getElementById('global-disease-pills');
     if (!container) return;
-    
+
     const current = store.get('currentDisease') || 'dengue';
     container.innerHTML = '';
-    
+
     DISEASES.forEach(d => {
       const pill = document.createElement('button');
       pill.className = `btn-pill ${current === d.id ? 'active' : ''}`;
@@ -178,10 +178,10 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
   // ── 7. Keyboard shortcuts ────────────────────────────────────────
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      if (store.get('panelOpen'))       panelComponent.close();
-      if (store.get('alertModalOpen'))  alertModal.close();
-      if (store.get('reportMode'))      reportComponent.close();
-      if (store.get('aiChatOpen'))      aiAssistant.close();
+      if (store.get('panelOpen')) panelComponent.close();
+      if (store.get('alertModalOpen')) alertModal.close();
+      if (store.get('reportMode')) reportComponent.close();
+      if (store.get('aiChatOpen')) aiAssistant.close();
     }
     if (e.key === '/' && !e.target.matches('input, textarea')) {
       e.preventDefault();
@@ -199,11 +199,11 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
         store.set('userLocation', { lat, lng });
         const found = mapComponent.findWardAt(lat, lng);
         if (found) {
-            mapComponent.selectWard(found.id, found.name);
-            mapComponent.flyToWard(found.id);
-            toast.show(`Detected location: ${found.name}`, 'info');
+          mapComponent.selectWard(found.id, found.name);
+          mapComponent.flyToWard(found.id);
+          toast.show(`Detected location: ${found.name}`, 'info');
         } else {
-            mapComponent.panTo(lat, lng, 14);
+          mapComponent.panTo(lat, lng, 14);
         }
       },
       (err) => {
@@ -221,14 +221,14 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
   function _wardFactors(wardId) {
     const id = parseInt(wardId, 10);
     return {
-      nearWater:      (id % 7 === 0 || id % 11 === 0),   // ~24% of wards
-      poorDrainage:   (id % 5 === 0 || id % 13 === 0),   // ~27% of wards
-      highDensity:    (id % 3 === 0),                     // ~33% of wards
+      nearWater: (id % 7 === 0 || id % 11 === 0),   // ~24% of wards
+      poorDrainage: (id % 5 === 0 || id % 13 === 0),   // ~27% of wards
+      highDensity: (id % 3 === 0),                     // ~33% of wards
       industrialZone: (id % 17 === 0),                    // ~6%  of wards
-      lowElevation:   (id % 4 === 0),                     // ~25% of wards
-      openBurnArea:   (id % 9 === 0),                     // ~11% of wards
-      crowdedMarket:  (id % 6 === 0),                     // ~17% of wards
-      noisePct:       ((id * 6271) % 100) / 100,          // 0.0–1.0, unique per ward
+      lowElevation: (id % 4 === 0),                     // ~25% of wards
+      openBurnArea: (id % 9 === 0),                     // ~11% of wards
+      crowdedMarket: (id % 6 === 0),                     // ~17% of wards
+      noisePct: ((id * 6271) % 100) / 100,          // 0.0–1.0, unique per ward
     };
   }
 
@@ -241,27 +241,27 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
       // Base: rainfall effect everywhere
       score = 30 + (f.noisePct * 12);
       // Water proximity drives the biggest spikes
-      if (f.nearWater)     score += 35;
-      if (f.poorDrainage)  score += 28;
-      if (f.lowElevation)  score += 18;
-      if (f.highDensity)   score += densityRatio * 15;
+      if (f.nearWater) score += 35;
+      if (f.poorDrainage) score += 28;
+      if (f.lowElevation) score += 18;
+      if (f.highDensity) score += densityRatio * 15;
       if (f.crowdedMarket) score += 10;
 
     } else if (mode === 'pollution') {
       // Base: density-driven everywhere
       score = 20 + (densityRatio * 30) + (f.noisePct * 10);
       if (f.industrialZone) score += 38;
-      if (f.openBurnArea)   score += 25;
-      if (f.highDensity)    score += densityRatio * 20;
-      if (f.crowdedMarket)  score += 15;
-      if (f.nearWater)      score += 8; // water bodies trap smog
+      if (f.openBurnArea) score += 25;
+      if (f.highDensity) score += densityRatio * 20;
+      if (f.crowdedMarket) score += 15;
+      if (f.nearWater) score += 8; // water bodies trap smog
 
     } else if (mode === 'cold') {
       // Base: moderate, density spreads respiratory risk
       score = 18 + (f.noisePct * 14);
-      if (f.highDensity)    score += densityRatio * 28;
-      if (f.crowdedMarket)  score += 22;
-      if (f.poorDrainage)   score += 12; // damp cold worsens conditions
+      if (f.highDensity) score += densityRatio * 28;
+      if (f.crowdedMarket) score += 22;
+      if (f.poorDrainage) score += 12; // damp cold worsens conditions
       if (f.industrialZone) score += 10;
     }
 
@@ -274,10 +274,10 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     const level = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
 
     if (mode === 'monsoon') {
-      if (f.nearWater)     reasons.push('Proximity to water bodies — stagnant water risk elevated');
-      if (f.poorDrainage)  reasons.push('Poor drainage infrastructure — flooding likely after rainfall');
-      if (f.lowElevation)  reasons.push('Low elevation zone — water accumulation confirmed');
-      if (f.highDensity)   reasons.push('High population density — vector breeding accelerated');
+      if (f.nearWater) reasons.push('Proximity to water bodies — stagnant water risk elevated');
+      if (f.poorDrainage) reasons.push('Poor drainage infrastructure — flooding likely after rainfall');
+      if (f.lowElevation) reasons.push('Low elevation zone — water accumulation confirmed');
+      if (f.highDensity) reasons.push('High population density — vector breeding accelerated');
       if (f.crowdedMarket) reasons.push('Crowded market area — sanitation pressure increases');
       if (reasons.length === 0) {
         if (level === 'low') reasons.push('Good drainage and elevation — monsoon impact contained');
@@ -286,19 +286,19 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
 
     } else if (mode === 'pollution') {
       if (f.industrialZone) reasons.push('Active industrial zone — PM2.5 and NO₂ levels critical');
-      if (f.openBurnArea)   reasons.push('Open burning detected nearby — AQI severely impacted');
-      if (f.highDensity)    reasons.push('Dense urban area — pollutant dispersion is limited');
-      if (f.crowdedMarket)  reasons.push('High vehicle and foot traffic — localized pollution spike');
-      if (f.nearWater)      reasons.push('Water body traps ground-level smog in this zone');
+      if (f.openBurnArea) reasons.push('Open burning detected nearby — AQI severely impacted');
+      if (f.highDensity) reasons.push('Dense urban area — pollutant dispersion is limited');
+      if (f.crowdedMarket) reasons.push('High vehicle and foot traffic — localized pollution spike');
+      if (f.nearWater) reasons.push('Water body traps ground-level smog in this zone');
       if (reasons.length === 0) {
         if (level === 'low') reasons.push('Low density and no industrial activity — cleaner air quality');
         else reasons.push('Urban pollution accumulation in this sector');
       }
 
     } else if (mode === 'cold') {
-      if (f.highDensity)    reasons.push('Dense housing — rapid respiratory disease transmission likely');
-      if (f.crowdedMarket)  reasons.push('Crowded market — high person-to-person contact in cold weather');
-      if (f.poorDrainage)   reasons.push('Damp conditions from drainage — worsens respiratory symptoms');
+      if (f.highDensity) reasons.push('Dense housing — rapid respiratory disease transmission likely');
+      if (f.crowdedMarket) reasons.push('Crowded market — high person-to-person contact in cold weather');
+      if (f.poorDrainage) reasons.push('Damp conditions from drainage — worsens respiratory symptoms');
       if (f.industrialZone) reasons.push('Industrial dust and cold air mix — bronchitis risk elevated');
       if (reasons.length === 0) {
         if (level === 'low') reasons.push('Lower density and open spaces — cold-weather spread is limited');
@@ -308,9 +308,9 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
 
     // Always append scenario context
     const ctx = {
-      monsoon:   'Scenario: 2025 Bengaluru monsoon simulation (Oct conditions)',
+      monsoon: 'Scenario: 2025 Bengaluru monsoon simulation (Oct conditions)',
       pollution: 'Scenario: 2025 post-Diwali pollution simulation (Nov conditions)',
-      cold:      'Scenario: 2025 Bengaluru winter simulation (Dec–Jan conditions)',
+      cold: 'Scenario: 2025 Bengaluru winter simulation (Dec–Jan conditions)',
     };
     reasons.push(ctx[mode]);
 
@@ -345,7 +345,7 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     Object.entries(scores).forEach(([wardId, ward]) => {
       const density = popLookup[wardId] || 10000;
       const sim = _simulatedScore(wardId, mode, density, maxDensity);
-      ward.simulated_score   = sim;
+      ward.simulated_score = sim;
       ward.simulated_reasons = _simulatedReasons(wardId, mode, sim);
     });
 
@@ -354,9 +354,9 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
 
     const badge = document.getElementById('sim-badge');
     const labels = {
-      monsoon:   '🌧 Monsoon 2025',
+      monsoon: '🌧 Monsoon 2025',
       pollution: '🌫 Pollution 2025',
-      cold:      '❄ Cold 2025',
+      cold: '❄ Cold 2025',
     };
     if (badge) {
       badge.textContent = labels[mode];
@@ -372,12 +372,12 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     // If a ward panel is open, reload it with simulation data
     const openWardId = store.get('selectedWardId');
     if (openWardId) panelComponent.open(openWardId);
-    
+
     window.NH_LOG.ui(`Simulation mode set to: ${mode || 'None'}`);
   }
 
   // Wire Simulate button
-  const simBtn   = document.getElementById('btn-simulate');
+  const simBtn = document.getElementById('btn-simulate');
   const simPanel = document.getElementById('sim-panel');
   if (simBtn && simPanel) {
     simBtn.addEventListener('click', e => {
@@ -394,17 +394,17 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     el.addEventListener('click', () => setSimulation(el.dataset.sim || null));
   });
   // ── SMART SUMMARY ─────────────────────────────────────────────────────────
-  (function() {
-    const summaryBtn     = document.getElementById('btn-summary');
-    const summaryPanel   = document.getElementById('summary-panel');
+  (function () {
+    const summaryBtn = document.getElementById('btn-summary');
+    const summaryPanel = document.getElementById('summary-panel');
     const summaryOverlay = document.getElementById('summary-modal-overlay');
-    const summaryClose   = document.getElementById('summary-modal-close');
-    const summaryTitle   = document.getElementById('summary-modal-title');
-    const summarySub     = document.getElementById('summary-modal-subtitle');
-    const summaryBody    = document.getElementById('summary-modal-body');
-    const summaryMeta    = document.getElementById('summary-modal-meta');
-    const summaryDot     = document.getElementById('summary-loading-dot');
-    const summaryTyping  = document.getElementById('summary-typing');
+    const summaryClose = document.getElementById('summary-modal-close');
+    const summaryTitle = document.getElementById('summary-modal-title');
+    const summarySub = document.getElementById('summary-modal-subtitle');
+    const summaryBody = document.getElementById('summary-modal-body');
+    const summaryMeta = document.getElementById('summary-modal-meta');
+    const summaryDot = document.getElementById('summary-loading-dot');
+    const summaryTyping = document.getElementById('summary-typing');
 
     if (!summaryBtn) return;
 
@@ -436,30 +436,30 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
 
     async function _openSummary(range) {
       const labels = {
-        past:     'Past 10 Days — Weather & Health',
-        today:    'Today — Current Risk Status',
+        past: 'Past 10 Days — Weather & Health',
+        today: 'Today — Current Risk Status',
         forecast: 'Next 10 Days — Health Forecast',
       };
-      const wardId   = store.get('selectedWardId') || null;
+      const wardId = store.get('selectedWardId') || null;
       const wardName = wardId
         ? (store.get('wardList') || []).find(w => w.id === wardId)?.name || `Ward ${wardId}`
         : 'All of Bengaluru';
 
       summaryTitle.textContent = labels[range] || 'Summary';
-      summarySub.textContent   = wardName;
-      summaryBody.innerHTML    = '';
-      summaryMeta.textContent  = '';
+      summarySub.textContent = wardName;
+      summaryBody.innerHTML = '';
+      summaryMeta.textContent = '';
       summaryTyping.textContent = 'Generating summary...';
       summaryBody.appendChild(summaryTyping);
       summaryDot.style.display = 'block';
       summaryOverlay.classList.remove('hidden');
 
       // Build context from store
-      const scores    = store.get('allRiskScores') || {};
+      const scores = store.get('allRiskScores') || {};
       const wardScores = Object.values(scores);
-      const high   = wardScores.filter(w => (window.simulationMode ? w.simulated_score >= 70 : w.risk_level === 'high')).length;
+      const high = wardScores.filter(w => (window.simulationMode ? w.simulated_score >= 70 : w.risk_level === 'high')).length;
       const medium = wardScores.filter(w => (window.simulationMode ? (w.simulated_score >= 40 && w.simulated_score < 70) : w.risk_level === 'medium')).length;
-      const low    = wardScores.filter(w => (window.simulationMode ? w.simulated_score < 40 : w.risk_level === 'low')).length;
+      const low = wardScores.filter(w => (window.simulationMode ? w.simulated_score < 40 : w.risk_level === 'low')).length;
       const disease = store.get('currentDisease') || 'dengue';
 
       // Get focused ward detail if one is selected
@@ -499,12 +499,12 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
             clearInterval(interval);
             // Apply formatting if helper exists
             if (window.aiAssistant && window.aiAssistant.formatMarkdown) {
-               p.innerHTML = window.aiAssistant.formatMarkdown(text);
+              p.innerHTML = window.aiAssistant.formatMarkdown(text);
             }
           }
         }, 10);
 
-        summaryMeta.textContent = `${labels[range]} · ${disease.charAt(0).toUpperCase() + disease.slice(1)} · ${wardName} · ${new Date().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'})}`;
+        summaryMeta.textContent = `${labels[range]} · ${disease.charAt(0).toUpperCase() + disease.slice(1)} · ${wardName} · ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`;
 
       } catch (err) {
         summaryBody.innerHTML = `<p style="color:#c94b2c;font-size:13px;">Could not generate summary: ${err.message}</p>`;
@@ -519,9 +519,9 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
 
 // ── ML INTEGRATION MODAL ────────────────────────────────────────────────────
 (function () {
-  const btn     = document.getElementById('btn-ml');
+  const btn = document.getElementById('btn-ml');
   const overlay = document.getElementById('ml-modal-overlay');
-  const closeBtn= document.getElementById('ml-modal-close');
+  const closeBtn = document.getElementById('ml-modal-close');
   if (!btn || !overlay) return;
 
   let _loaded = false;
@@ -541,7 +541,7 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     document.body.style.overflow = ''; // Unlock scroll
     overlay.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('reveal'));
   });
-  overlay.addEventListener('click', e => { 
+  overlay.addEventListener('click', e => {
     if (e.target === overlay) {
       overlay.classList.add('hidden');
       document.body.style.overflow = ''; // Unlock scroll
@@ -571,10 +571,10 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     const container = document.getElementById('ml-model-cards');
     if (!container) return;
     const cards = [
-      { label: 'Architecture',  value: model.type,       icon: '🧠' },
-      { label: 'ROC-AUC Score', value: model.roc_auc,    icon: '⚡' },
-      { label: 'Training Size', value: model.n_samples,  icon: '📚' },
-      { label: 'Vector Size',   value: model.n_features, icon: '📐' },
+      { label: 'Architecture', value: model.type, icon: '🧠' },
+      { label: 'ROC-AUC Score', value: model.roc_auc, icon: '⚡' },
+      { label: 'Training Size', value: model.n_samples, icon: '📚' },
+      { label: 'Vector Size', value: model.n_features, icon: '📐' },
     ];
     container.innerHTML = cards.map(c => `
       <div class="ml-card">
@@ -601,14 +601,14 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
   function _renderFeatureImportance(features, importances) {
     const container = document.getElementById('ml-features');
     if (!container || !importances) return;
-    const sorted = Object.entries(importances).sort((a,b) => b[1]-a[1]);
+    const sorted = Object.entries(importances).sort((a, b) => b[1] - a[1]);
     const max = sorted[0]?.[1] || 1;
     container.innerHTML = sorted.map(([feat, imp]) => {
       const pct = Math.round((imp / max) * 100);
       const color = pct > 60 ? '#1db97a' : pct > 35 ? '#2d8ef0' : '#c4870a';
       return `
         <div class="ml-feature-row">
-          <div class="ml-feature-name">${feat.replace(/_/g,' ')}</div>
+          <div class="ml-feature-name">${feat.replace(/_/g, ' ')}</div>
           <div class="ml-feature-bar-bg">
             <div class="ml-feature-bar-val" style="width:0; background:${color};" data-width="${pct}%"></div>
           </div>
@@ -628,14 +628,14 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     const container = document.getElementById('ml-live-prediction');
     if (!container || !lp) return;
     const riskColor = lp.predicted_output.risk_level === 'high' ? '#c94b2c' :
-                      lp.predicted_output.risk_level === 'medium' ? '#c4870a' : '#1db97a';
+      lp.predicted_output.risk_level === 'medium' ? '#c4870a' : '#1db97a';
     const features = lp.input_features;
     container.innerHTML = `
       <div style="display:flex; flex-direction:column; justify-content:space-between; height:100%; padding:20px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:16px;">
         <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:12px;">
-          ${Object.entries(features).map(([k,v]) => `
+          ${Object.entries(features).map(([k, v]) => `
             <div style="border-left:2px solid rgba(255,255,255,0.05); padding-left:10px;">
-              <div style="font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;">${k.replace(/_/g,' ')}</div>
+              <div style="font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;">${k.replace(/_/g, ' ')}</div>
               <div style="font-size:14px; font-weight:600; color:var(--text-primary);">${typeof v === 'number' ? v.toFixed(1) : v}</div>
             </div>`).join('')}
         </div>
@@ -656,7 +656,7 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     const table = document.getElementById('ml-data-table');
     if (!table || !rows || rows.length === 0) return;
 
-    const cols = ['rainfall_7d','temp_avg','humidity_avg','population_density','dengue_cases_30d','month','label'];
+    const cols = ['rainfall_7d', 'temp_avg', 'humidity_avg', 'population_density', 'dengue_cases_30d', 'month', 'label'];
     const colLabels = {
       rainfall_7d: 'Rain 7d (mm)', temp_avg: 'Temp (°C)', humidity_avg: 'Humidity (%)',
       population_density: 'Pop Density', dengue_cases_30d: 'Cases 30d',
@@ -682,17 +682,17 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
   }
 
   // ── TRAVEL MODE ──────────────────────────────────────────────────────────
-    (function() {
-      const overlay   = document.getElementById('travel-modal-overlay');
-      const checkBtn  = document.getElementById('travel-check-btn');
-      const resultDiv = document.getElementById('travel-result');
-  
-      if (!overlay) return;
-  
-      // Ward search autocomplete for both inputs
+  (function () {
+    const overlay = document.getElementById('travel-modal-overlay');
+    const checkBtn = document.getElementById('travel-check-btn');
+    const resultDiv = document.getElementById('travel-result');
+
+    if (!overlay) return;
+
+    // Ward search autocomplete for both inputs
     function _wireSearch(inputId, hiddenId, dropdownId) {
-      const input    = document.getElementById(inputId);
-      const hidden   = document.getElementById(hiddenId);
+      const input = document.getElementById(inputId);
+      const hidden = document.getElementById(hiddenId);
       const dropdown = document.getElementById(dropdownId);
       if (!input) return;
 
@@ -717,13 +717,13 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     }
 
     _wireSearch('travel-from-input', 'travel-from-id', 'travel-from-results');
-    _wireSearch('travel-to-input',   'travel-to-id',   'travel-to-results');
+    _wireSearch('travel-to-input', 'travel-to-id', 'travel-to-results');
 
     checkBtn?.addEventListener('click', async () => {
       let fromId = document.getElementById('travel-from-id').value;
-      let toId   = document.getElementById('travel-to-id').value;
+      let toId = document.getElementById('travel-to-id').value;
       const fromName = document.getElementById('travel-from-input').value;
-      const toName   = document.getElementById('travel-to-input').value;
+      const toName = document.getElementById('travel-to-input').value;
 
       // Fallback: Try to find ID by name if not selected from dropdown
       const wards = store.get('wardList') || [];
@@ -736,9 +736,9 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
         if (match) toId = match.id;
       }
 
-      if (!fromId || !toId) { 
-        toast.show('Please select valid Bengaluru wards from the suggestions', 'warning'); 
-        return; 
+      if (!fromId || !toId) {
+        toast.show('Please select valid Bengaluru wards from the suggestions', 'warning');
+        return;
       }
 
       dom.setText(checkBtn, 'Analyzing...');
@@ -757,16 +757,16 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
                   <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:${colorMap[lvl] || '#aaa'}">${lvl}</div>`;
         };
         document.getElementById('travel-from-card').innerHTML = _card(data.from, data.from.score);
-        document.getElementById('travel-to-card').innerHTML   = _card(data.to,   data.to.score);
+        document.getElementById('travel-to-card').innerHTML = _card(data.to, data.to.score);
         document.getElementById('travel-advisory').textContent = data.advisory;
         resultDiv.style.display = 'block';
 
-      } catch(err) {
+      } catch (err) {
         toast.show('Travel risk check failed: ' + err.message, 'error');
       } finally {
         dom.setText(checkBtn, 'Check Travel Risk');
         checkBtn.disabled = false;
       }
-  })();
+    })();
   })();
 })();
