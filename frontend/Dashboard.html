@@ -1,0 +1,3094 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NeighborHealth — City Intelligence Platform</title>
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #04040a;
+            --bg2: #080812;
+            --bg3: #0c0c1a;
+            --surface: rgba(255, 255, 255, 0.04);
+            --surface2: rgba(255, 255, 255, 0.07);
+            --border: rgba(255, 255, 255, 0.08);
+            --border2: rgba(255, 255, 255, 0.15);
+            --text: #f0eff8;
+            --text2: #9896b0;
+            --text3: #5c5a72;
+            --teal: #1db97a;
+            --teal2: #0f6e48;
+            --teal-glow: rgba(29, 185, 122, 0.15);
+            --red: #c94b2c;
+            --amber: #c4870a;
+            --blue: #2d8ef0;
+            --r: 12px;
+            --r2: 20px;
+            --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            overflow-x: hidden
+        }
+
+        /* ── FORCE FIELD BACKGROUND CANVAS ── */
+        #ff-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background: var(--bg);
+        }
+
+        body {
+            background: transparent;
+            color: var(--text);
+            font-family: var(--sans);
+            line-height: 1.6;
+            overflow-x: hidden
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none
+        }
+
+        button {
+            cursor: pointer;
+            font-family: var(--sans)
+        }
+
+        /* 3. Brutalist Typography System */
+        h1, h2 {
+            font-family: var(--sans);
+            color: #FFFFFF;
+            letter-spacing: -0.04em;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        h1 { font-size: clamp(3rem, 5vw, 4.5rem); margin-bottom: 24px; }
+        h2 { font-size: clamp(2rem, 4vw, 3.5rem); margin-bottom: 20px; }
+
+        p, span {
+            color: #A1A1AA; /* Slate grey for stark contrast */
+            line-height: 1.6;
+        }
+
+        /* 1. HUD Image Treatment */
+        .hud-image-wrapper {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            background: #050505;
+        }
+
+        .hud-vignette {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle, transparent 30%, rgba(5, 5, 5, 1) 100%);
+            z-index: 1;
+        }
+
+        .hud-scanlines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0) 0px,
+                rgba(0, 0, 0, 0.1) 1px,
+                rgba(0, 0, 0, 0) 2px
+            );
+            z-index: 2;
+            opacity: 0.6;
+        }
+
+        /* 2. Technical Framing & Data Labels */
+        .hud-pill {
+            position: absolute;
+            background: rgba(10, 10, 10, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'SF Mono', 'Fira Code', 'Roboto Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            padding: 6px 10px;
+            z-index: 3;
+            text-transform: uppercase;
+        }
+
+        .hud-pill-top-right {
+            top: 72px; /* Accounting for fixed nav */
+            right: 24px;
+        }
+
+        .hud-pill-bottom-left {
+            bottom: 24px;
+            left: 24px;
+        }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar {
+            width: 4px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg)
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--teal2);
+            border-radius: 2px
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 48px;
+            background: rgba(4, 4, 10, 0.55);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.02em
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--teal);
+            animation: pulse-dot 2s ease-in-out infinite
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.8)
+            }
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px
+        }
+
+        .nav-links a {
+            font-size: 13px;
+            color: var(--text2);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-links a.active {
+            color: var(--teal);
+            font-weight: 600;
+            text-shadow: 0 0 12px rgba(29, 185, 122, 0.4);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--teal);
+            box-shadow: 0 0 8px var(--teal);
+        }
+
+        .nav-links a:hover {
+            color: var(--text)
+        }
+
+        .nav-cta {
+            background: var(--teal);
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            border-radius: var(--r);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-cta:hover {
+            background: #22d98f;
+            transform: translateY(-1px)
+        }
+
+        /* ── HERO ── */
+        #hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 100px 24px 80px;
+            text-align: center;
+        }
+
+        .hero-canvas {
+            position: absolute;
+            inset: 0;
+            z-index: 0
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 860px
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(29, 185, 122, 0.1);
+            border: 1px solid rgba(29, 185, 122, 0.25);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 12px;
+            color: var(--teal);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 32px;
+            animation: fade-up 0.8s ease both;
+        }
+
+        .hero-title {
+            font-size: clamp(44px, 7vw, 88px);
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1.0;
+            margin-bottom: 24px;
+            animation: fade-up 0.8s 0.1s ease both;
+        }
+
+        .hero-title span {
+            background: linear-gradient(135deg, #1db97a, #2d8ef0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: clamp(16px, 2vw, 20px);
+            color: var(--text2);
+            max-width: 580px;
+            margin: 0 auto 48px;
+            line-height: 1.7;
+            animation: fade-up 0.8s 0.2s ease both;
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            animation: fade-up 0.8s 0.3s ease both
+        }
+
+        .btn-hero {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            border-radius: var(--r);
+            font-size: 15px;
+            font-weight: 500;
+            border: none;
+            transition: all 0.25s;
+        }
+
+        .btn-hero.primary {
+            background: var(--teal);
+            color: #fff
+        }
+
+        .btn-hero.primary:hover {
+            background: #22d98f;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(29, 185, 122, 0.3)
+        }
+
+        .btn-hero.secondary {
+            background: var(--surface2);
+            color: var(--text);
+            border: 1px solid var(--border2)
+        }
+
+        .btn-hero.secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px)
+        }
+
+        .hero-arrow {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s ease-in-out infinite;
+            opacity: 0.4
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateX(-50%) translateY(0)
+            }
+
+            50% {
+                transform: translateX(-50%) translateY(6px)
+            }
+        }
+
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background-image: linear-gradient(rgba(29, 185, 122, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(29, 185, 122, 0.05) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%);
+        }
+
+        .hero-glow {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 400px;
+            background: radial-gradient(ellipse, rgba(29, 185, 122, 0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* ── SECTION BASE ── */
+        section {
+            padding: 100px 24px;
+            position: relative
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto
+        }
+
+        .section-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--teal);
+            margin-bottom: 16px;
+        }
+
+        .section-tag::before {
+            content: '';
+            width: 24px;
+            height: 1px;
+            background: var(--teal)
+        }
+
+        .section-title {
+            font-size: clamp(28px, 4vw, 48px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+            line-height: 1.15
+        }
+
+        .section-sub {
+            font-size: 16px;
+            color: var(--text2);
+            max-width: 540px;
+            line-height: 1.7
+        }
+
+        /* ── REVEAL ANIMATION ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(32px);
+            transition: opacity 0.7s ease, transform 0.7s ease
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0)
+        }
+
+        .reveal-delay-1 {
+            transition-delay: 0.1s
+        }
+
+        .reveal-delay-2 {
+            transition-delay: 0.2s
+        }
+
+        .reveal-delay-3 {
+            transition-delay: 0.3s
+        }
+
+        .reveal-delay-4 {
+            transition-delay: 0.4s
+        }
+
+        /* ── PROBLEM ── */
+        #problem {
+            background: transparent
+        }
+
+        .problem-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 56px
+        }
+
+        .problem-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            padding: 32px;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        .problem-card:hover {
+            border-color: var(--border2);
+            background: var(--surface2)
+        }
+
+        .problem-num {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            margin-bottom: 8px
+        }
+
+        .problem-num.red {
+            color: var(--red)
+        }
+
+        .problem-num.amber {
+            color: var(--amber)
+        }
+
+        .problem-label {
+            font-size: 13px;
+            color: var(--text2);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em
+        }
+
+        .problem-text {
+            font-size: 15px;
+            color: var(--text2);
+            line-height: 1.6
+        }
+
+        /* ── PROBLEM CANVAS ANIMATION (scroll-hijack, no spacer) ── */
+
+        /* Section needs no special overflow tricks anymore — just normal flow */
+        #problem {
+            overflow: hidden;
+        }
+
+        /* Canvas wrapper — fixed height block, no sticky, no spacer */
+        .problem-canvas-wrap {
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+            background: var(--bg);
+            /* Fade in on reveal */
+            opacity: 0;
+            transition: opacity 0.7s ease-out;
+        }
+
+        .problem-canvas-wrap.pv-visible {
+            opacity: 1;
+        }
+
+        /* Canvas fills the wrap */
+        #problemCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Preload progress overlay */
+        .pv-loader {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .pv-loader-label {
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text3);
+        }
+
+        .pv-loader-track {
+            width: 180px;
+            height: 2px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .pv-loader-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--teal), var(--blue));
+            border-radius: 2px;
+            transition: width 0.08s linear;
+        }
+
+        /* Frame progress bar — shows animation progress at canvas bottom */
+        .pv-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--teal), var(--blue));
+            border-radius: 0;
+            z-index: 3;
+            transition: width 0.05s linear;
+        }
+
+        /* Scroll hint */
+        .pv-scroll-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .pv-scroll-hint.hint-visible {
+            opacity: 1;
+        }
+
+        .pv-scroll-hint svg {
+            animation: bounce-arrow 1.4s ease-in-out infinite;
+        }
+
+        @keyframes bounce-arrow {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(6px);
+            }
+        }
+
+        /* Locked state: dim the canvas border very slightly to signal capture */
+        .problem-canvas-wrap.scroll-locked {
+            box-shadow: 0 0 0 1px rgba(29, 185, 122, 0.25);
+        }
+
+        @media (max-width: 900px) {
+            .problem-canvas-wrap {
+                height: 55vh;
+                margin-top: 40px;
+            }
+        }
+
+        /* ── SOLUTION ── */
+        .solution-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 64px;
+            align-items: center;
+            margin-top: 56px
+        }
+
+        .solution-visual {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .solution-visual::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(29, 185, 122, 0.15), transparent 70%);
+        }
+
+        .solution-points {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px
+        }
+
+        .solution-points li {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            font-size: 15px;
+            line-height: 1.5
+        }
+
+        .sol-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(29, 185, 122, 0.12);
+            border: 1px solid rgba(29, 185, 122, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* ── HOW IT WORKS ── */
+        #howitworks {
+            background: transparent
+        }
+
+        .pipeline {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0;
+            margin-top: 64px;
+            position: relative;
+        }
+
+        .pipeline::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: calc(10%);
+            right: calc(10%);
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--teal), var(--blue), transparent);
+            animation: flow-line 3s linear infinite;
+        }
+
+        @keyframes flow-line {
+            0% {
+                background-position: 0% 50%
+            }
+
+            100% {
+                background-position: 100% 50%
+            }
+        }
+
+        .pipe-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 16px 8px;
+            position: relative
+        }
+
+        .pipe-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+
+        .pipe-step:hover .pipe-icon {
+            background: var(--teal-glow);
+            border-color: rgba(29, 185, 122, 0.4);
+            transform: scale(1.08)
+        }
+
+        .pipe-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px
+        }
+
+        .pipe-sub {
+            font-size: 11px;
+            color: var(--text3);
+            line-height: 1.5
+        }
+
+        .pipe-step.active .pipe-icon {
+            background: rgba(29, 185, 122, 0.15);
+            border-color: var(--teal);
+            box-shadow: 0 0 24px rgba(29, 185, 122, 0.2)
+        }
+
+        /* 4. High-End Bento Grid System */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            margin-top: 56px;
+            width: 100%;
+        }
+
+        .feat-card {
+            position: relative;
+            background: linear-gradient(180deg, rgba(20, 20, 20, 0.4) 0%, rgba(10, 10, 10, 0.8) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            padding: 32px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            overflow: hidden;
+        }
+
+        .feat-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 5. Spotlight Glow Setup */
+        .feat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background: radial-gradient(
+                800px circle at var(--mouse-x, 0) var(--mouse-y, 0),
+                rgba(255, 255, 255, 0.05),
+                transparent 40%
+            );
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .features-grid:hover .feat-card::before {
+            opacity: 1;
+        }
+
+        .feat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(29, 185, 122, 0.05);
+            border: 1px solid rgba(29, 185, 122, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 18px;
+        }
+
+        .feat-title {
+            color: #FFFFFF;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .feat-desc {
+            color: #A1A1AA;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .feat-tag {
+            display: inline-block;
+            margin-top: 14px;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 100px;
+            background: rgba(29, 185, 122, 0.1);
+            color: var(--teal);
+        }
+
+        /* ── LIVE VISUALIZATION ── */
+        #live {
+            background: transparent
+        }
+
+        .live-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 56px
+        }
+
+        .live-col {
+            display: flex;
+            flex-direction: column;
+            gap: 16px
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .stat-info {}
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 6px
+        }
+
+        .stat-val {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.03em
+        }
+
+        .stat-val.teal {
+            color: var(--teal)
+        }
+
+        .stat-val.red {
+            color: var(--red)
+        }
+
+        .stat-val.amber {
+            color: var(--amber)
+        }
+
+        .stat-change {
+            font-size: 12px;
+            color: var(--teal);
+            margin-top: 4px
+        }
+
+        .stat-badge {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .badge-red {
+            background: rgba(201, 75, 44, 0.12);
+            border: 1px solid rgba(201, 75, 44, 0.2)
+        }
+
+        .badge-amber {
+            background: rgba(196, 135, 10, 0.12);
+            border: 1px solid rgba(196, 135, 10, 0.2)
+        }
+
+        .badge-teal {
+            background: rgba(29, 185, 122, 0.12);
+            border: 1px solid rgba(29, 185, 122, 0.2)
+        }
+
+        .badge-blue {
+            background: rgba(45, 142, 240, 0.12);
+            border: 1px solid rgba(45, 142, 240, 0.2)
+        }
+
+        /* Ward risk mini-map */
+        .mini-map-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            padding: 24px;
+            flex: 1;
+        }
+
+        .mini-map-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text2);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--teal);
+            animation: pulse-dot 1.5s infinite
+        }
+
+        #live-map {
+            height: 480px;
+            width: 100%;
+            border-radius: 12px;
+            background: #04040a;
+            border: 1px solid var(--border);
+            cursor: default !important;
+        }
+
+        /* Prevent leaflet interaction visuals */
+        .leaflet-container {
+            background: #04040a !important;
+            cursor: default !important;
+        }
+
+        /* Trend chart */
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            padding: 24px;
+        }
+
+        .chart-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text2);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .chart-period {
+            font-size: 11px;
+            color: var(--text3)
+        }
+
+        .spark-chart {
+            height: 80px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .spark-canvas {
+            width: 100%;
+            height: 100%
+        }
+
+        /* Alert ticker */
+        .ticker-card {
+            background: rgba(201, 75, 44, 0.06);
+            border: 1px solid rgba(201, 75, 44, 0.2);
+            border-radius: var(--r2);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .ticker-icon {
+            font-size: 20px
+        }
+
+        .ticker-label {
+            font-size: 11px;
+            color: rgba(201, 75, 44, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 4px
+        }
+
+        .ticker-text {
+            font-size: 13px;
+            color: var(--text)
+        }
+
+        .ticker-badge {
+            margin-left: auto;
+            background: var(--red);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 100px;
+            white-space: nowrap;
+        }
+
+        /* Disease cards row */
+        .disease-row {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            margin-top: 16px
+        }
+
+        .disease-row::-webkit-scrollbar {
+            display: none
+        }
+
+        .dis-card {
+            flex-shrink: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r);
+            padding: 14px 16px;
+            min-width: 120px;
+            cursor: default;
+            transition: all 0.2s;
+        }
+
+        .dis-card:hover {
+            border-color: var(--border2)
+        }
+
+        .dis-name {
+            font-size: 11px;
+            color: var(--text3);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em
+        }
+
+        .dis-score {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.03em
+        }
+
+        .dis-level {
+            font-size: 10px;
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em
+        }
+
+        .dis-level.high {
+            color: var(--red)
+        }
+
+        .dis-level.medium {
+            color: var(--amber)
+        }
+
+        .dis-level.low {
+            color: var(--teal)
+        }
+
+        /* ── AI SECTION ── */
+        #ai {
+            background: transparent
+        }
+
+        .ai-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: start;
+            margin-top: 56px
+        }
+
+        .ai-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            padding: 28px;
+        }
+
+        .ai-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .ai-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(29, 185, 122, 0.3), rgba(45, 142, 240, 0.3));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .ai-name {
+            font-size: 14px;
+            font-weight: 600
+        }
+
+        .ai-model {
+            font-size: 11px;
+            color: var(--text3)
+        }
+
+        .ai-bubble {
+            background: rgba(29, 185, 122, 0.07);
+            border: 1px solid rgba(29, 185, 122, 0.15);
+            border-radius: 12px 12px 12px 3px;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text);
+        }
+
+        .ai-bubble.user {
+            background: var(--surface2);
+            border-color: var(--border2);
+            border-radius: 12px 12px 3px 12px;
+            font-size: 13px;
+            color: var(--text2);
+        }
+
+        .reasons-list-demo {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px
+        }
+
+        .reason-item-demo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(29, 185, 122, 0.05);
+            border: 1px solid rgba(29, 185, 122, 0.12);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 13px;
+        }
+
+        .reason-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--teal);
+            flex-shrink: 0
+        }
+
+        .reason-dot.red {
+            background: var(--red)
+        }
+
+        .reason-dot.amber {
+            background: var(--amber)
+        }
+
+        /* ── TECH STACK ── */
+        #tech {
+            background: transparent
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 56px
+        }
+
+        .tech-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            padding: 28px 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .tech-card:hover {
+            border-color: var(--border2);
+            transform: translateY(-3px)
+        }
+
+        .tech-logo {
+            font-size: 36px;
+            margin-bottom: 14px
+        }
+
+        .tech-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 6px
+        }
+
+        .tech-role {
+            font-size: 12px;
+            color: var(--text3)
+        }
+
+        /* ── FUTURE ── */
+        .future-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 56px
+        }
+
+        .future-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .future-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--teal), var(--blue));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .future-card:hover::after {
+            transform: scaleX(1)
+        }
+
+        .future-num {
+            font-size: 13px;
+            color: var(--text3);
+            margin-bottom: 14px;
+            font-variant-numeric: tabular-nums
+        }
+
+        .future-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em
+        }
+
+        .future-text {
+            font-size: 13px;
+            color: var(--text2);
+            line-height: 1.6
+        }
+
+        /* ── CTA ── */
+        #cta {
+            background: transparent;
+            text-align: center;
+            padding: 120px 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 400px;
+            background: radial-gradient(ellipse, rgba(29, 185, 122, 0.1), transparent 70%);
+            pointer-events: none;
+        }
+
+        .cta-title {
+            font-size: clamp(36px, 5vw, 64px);
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            margin-bottom: 20px
+        }
+
+        .cta-sub {
+            font-size: 18px;
+            color: var(--text2);
+            margin-bottom: 48px;
+            max-width: 480px;
+            margin-left: auto;
+            margin-right: auto
+        }
+
+        .cta-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap
+        }
+
+        .btn-launch {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 40px;
+            background: var(--teal);
+            color: #fff;
+            border: none;
+            border-radius: var(--r);
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            letter-spacing: -0.01em;
+        }
+
+        .btn-launch:hover {
+            background: #22d98f;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(29, 185, 122, 0.4)
+        }
+
+        .btn-launch-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 17px 32px;
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border2);
+            border-radius: var(--r);
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-launch-secondary:hover {
+            background: var(--surface2);
+            transform: translateY(-3px)
+        }
+
+        .launch-arrow {
+            display: inline-block;
+            transition: transform 0.2s
+        }
+
+        .btn-launch:hover .launch-arrow {
+            transform: translateX(4px)
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            background: rgba(4, 4, 10, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            padding: 40px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600
+        }
+
+        .footer-meta {
+            font-size: 12px;
+            color: var(--text3)
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px
+        }
+
+        .footer-links a {
+            font-size: 12px;
+            color: var(--text3);
+            transition: color 0.2s
+        }
+
+        .footer-links a:hover {
+            color: var(--text)
+        }
+
+        /* ── DIVIDER ── */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 0
+        }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(24px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0
+            }
+
+            100% {
+                background-position: 200% 0
+            }
+        }
+
+        /* ── RESPONSIVE ── */
+        @media(max-width:900px) {
+            nav {
+                padding: 14px 20px
+            }
+
+            .nav-links {
+                display: none
+            }
+
+            .problem-grid {
+                grid-template-columns: 1fr
+            }
+
+            .solution-split {
+                grid-template-columns: 1fr
+            }
+
+            .pipeline {
+                grid-template-columns: repeat(3, 1fr)
+            }
+
+            .pipeline::before {
+                display: none
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .live-layout {
+                grid-template-columns: 1fr
+            }
+
+            .ai-layout {
+                grid-template-columns: 1fr
+            }
+
+            .tech-grid {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .future-grid {
+                grid-template-columns: 1fr
+            }
+
+            footer {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center
+            }
+        }
+
+        @media(max-width:560px) {
+            .features-grid {
+                grid-template-columns: 1fr
+            }
+
+            .tech-grid {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .hero-title {
+                font-size: clamp(32px, 8vw, 40px);
+            }
+
+            section {
+                padding: 70px 16px
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="css/spider.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+
+<body>
+
+    <!-- ── Global Force Field Background Canvas ── -->
+    <canvas id="ff-canvas"></canvas>
+
+    <!-- Mobile Navigation Drawer -->
+    <div class="nav-mobile-drawer" id="nav-drawer">
+        <a href="#problem"    onclick="closeDrawer()">Problem</a>
+        <a href="#solution"   onclick="closeDrawer()">Solution</a>
+        <a href="#howitworks" onclick="closeDrawer()">How It Works</a>
+        <a href="#live"       onclick="closeDrawer()">Live System</a>
+        <a href="#ai"         onclick="closeDrawer()">AI Engine</a>
+        <a href="login.html"  class="nav-cta-mobile">🚀 Launch App</a>
+    </div>
+
+    <!-- NAV -->
+    <nav>
+        <div class="nav-logo">
+            <div class="nav-dot"></div>
+            NeighborHealth
+        </div>
+        <div class="nav-links">
+            <a href="#problem">Problem</a>
+            <a href="#solution">Solution</a>
+            <a href="#howitworks">How It Works</a>
+            <a href="#live">Live System</a>
+            <a href="#ai">AI Engine</a>
+        </div>
+        <button class="nav-cta" onclick="window.location.href='login.html'">Launch App</button>
+        <!-- Hamburger for mobile -->
+        <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu" onclick="toggleDrawer()">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+
+    <!-- ── Spider Mask Hero Section ──────────────────── -->
+    <section id="spider-hero" class="spider-hero-section">
+        <div class="spider-wrapper">
+            <div class="spider-mask-group">
+                <img src="assets/spider/mask.png" alt="Spider-Man Mask" class="spider-base-image">
+                <img src="assets/spider/face.png" alt="Revealed Face" class="spider-overlay-image">
+                <div class="spider-info">
+                    <h1>Identity Reveal</h1>
+                    <p>Hover to uncover the health agent</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HERO -->
+    <section id="hero">
+        <canvas class="hero-canvas" id="heroCanvas"></canvas>
+        <div class="hero-grid"></div>
+        <div class="hero-glow"></div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <div class="nav-dot"></div>
+                Bengaluru Health Intelligence — v1.0
+            </div>
+            <h1 class="hero-title">
+                Know the risk<br /><span>before it spreads</span>
+            </h1>
+            <p class="hero-sub">
+                AI-powered, ward-level disease prediction for Bengaluru. Real weather data, real government records,
+                real-time alerts — 7–10 days before outbreaks peak.
+            </p>
+            <div class="hero-actions">
+                <a href="login.html" class="btn-hero primary">
+                    Explore the Map
+                    <span class="launch-arrow">→</span>
+                </a>
+                <a href="#howitworks" class="btn-hero secondary">How It Works</a>
+            </div>
+        </div>
+        <div class="hero-arrow">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 4V16M4 10L10 16L16 10" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"
+                    stroke-linecap="round" />
+            </svg>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- PROBLEM -->
+    <section id="problem">
+        <div class="container">
+            <div class="section-tag">The Problem</div>
+            <h2 class="section-title reveal">Bengaluru loses to disease<br />because no one saw it coming</h2>
+            <p class="section-sub reveal reveal-delay-1">Every monsoon, thousands of cases spike across the city. Health
+                systems react after the outbreak has peaked. Citizens have no warning. BBMP has no ward-level
+                intelligence.</p>
+            <div class="problem-grid" style="margin-top:56px">
+                <div class="problem-card reveal reveal-delay-1">
+                    <div class="problem-num red" id="counter1">0</div>
+                    <div class="problem-label">Dengue cases — Karnataka 2019</div>
+                    <p class="problem-text">Parliamentary health records confirm this was the worst dengue year in
+                        recent Karnataka history — over 16,000 in Bengaluru alone. Zero early warning existed.</p>
+                </div>
+                <div class="problem-card reveal reveal-delay-2">
+                    <div class="problem-num amber" id="counter2">0</div>
+                    <div class="problem-label">BBMP wards with no risk intelligence</div>
+                    <p class="problem-text">All 198 BBMP wards operate without any real-time disease risk layer.
+                        Citizens get news from hospitals — after they're already sick.</p>
+                </div>
+                <div class="problem-card reveal reveal-delay-3">
+                    <div class="problem-num" style="color:var(--blue)" id="counter3">0</div>
+                    <div class="problem-label">Average days before outbreak detection</div>
+                    <p class="problem-text">Traditional surveillance detects outbreaks 10–14 days after the peak has
+                        already passed. The window to intervene is already closed.</p>
+                </div>
+                <div class="problem-card reveal reveal-delay-4">
+                    <div class="problem-num teal" style="color:var(--teal)" id="counter4">0</div>
+                    <div class="problem-label">Preventable cases if warned early</div>
+                    <p class="problem-text">Epidemiological models show that 60–70% of vector-borne disease cases are
+                        preventable with 7-day advance community action. We've built that window.</p>
+                </div>
+            </div>
+
+        </div>
+        </div><!-- /.container -->
+
+        <!-- PROBLEM CANVAS: Move outside the container for full-screen (100vw) -->
+        <div class="problem-canvas-wrap hud-image-wrapper" id="problemCanvasWrap">
+            
+            <!-- Technical Framing & Vignette HUD overlays -->
+            <div class="hud-scanlines"></div>
+            <div class="hud-vignette"></div>
+            <div class="hud-pill hud-pill-top-right">[ DATAFEED_ACTIVE ]</div>
+            <div class="hud-pill hud-pill-bottom-left">SYS.NOMINAL</div>
+
+            <!-- Preload progress (fades out after all 144 frames load) -->
+            <div class="pv-loader" id="pvLoader">
+                <div class="pv-loader-label">Loading frames&hellip;</div>
+                <div class="pv-loader-track">
+                    <div class="pv-loader-bar" id="pvLoaderBar"></div>
+                </div>
+            </div>
+
+            <canvas id="problemCanvas"
+                aria-label="Climate animation: rain vs heat — dengue &amp; heatstroke risk in Bengaluru">
+            </canvas>
+
+            <!-- Bottom progress bar shows animation progress -->
+            <div class="pv-progress-bar" id="pvProgressBar"></div>
+
+            <!-- Scroll nudge (shown once loaded, hidden once user starts scrolling) -->
+            <div class="pv-scroll-hint" id="pvScrollHint">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 3v10M3 8l5 5 5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                Scroll to advance
+            </div>
+
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- SOLUTION -->
+    <section id="solution">
+        <div class="container">
+            <div class="section-tag">The Solution</div>
+            <div class="solution-split">
+                <div class="reveal">
+                    <h2 class="section-title">NeighborHealth is the early warning layer Bengaluru never had</h2>
+                    <p class="section-sub" style="margin-bottom:32px">A hyper-local disease intelligence platform that
+                        predicts outbreak risk at ward level — 7 to 10 days before cases peak — using AI, real weather,
+                        and government health data.</p>
+                    <ul class="solution-points">
+                        <li>
+                            <div class="sol-icon">🗺️</div>
+                            <div><strong>Ward-level precision</strong><br /><span
+                                    style="color:var(--text2);font-size:14px">198 BBMP wards individually scored. Not
+                                    city-wide averages — your neighbourhood, specifically.</span></div>
+                        </li>
+                        <li>
+                            <div class="sol-icon">🔮</div>
+                            <div><strong>Predictive, not reactive</strong><br /><span
+                                    style="color:var(--text2);font-size:14px">Risk scores for the next 7–10 days using
+                                    weather forecast data. You see what's coming before it arrives.</span></div>
+                        </li>
+                        <li>
+                            <div class="sol-icon">📡</div>
+                            <div><strong>12 diseases, one dashboard</strong><br /><span
+                                    style="color:var(--text2);font-size:14px">Dengue, Malaria, Cholera, Heatstroke, and
+                                    8 more. Each with season-aware risk models.</span></div>
+                        </li>
+                        <li>
+                            <div class="sol-icon">🤖</div>
+                            <div><strong>AI explains the why</strong><br /><span
+                                    style="color:var(--text2);font-size:14px">Grok AI generates plain-language reasons
+                                    for each ward's risk. Not just a number — a story.</span></div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="solution-visual reveal reveal-delay-2">
+                    <div
+                        style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:20px;display:flex;align-items:center;gap:8px">
+                        <div
+                            style="width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse-dot 1.5s infinite">
+                        </div>
+                        Live Risk Overview — Bengaluru
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                        <div
+                            style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(201,75,44,0.08);border:1px solid rgba(201,75,44,0.2);border-radius:10px">
+                            <div>
+                                <div style="font-size:13px;font-weight:500">Koramangala</div>
+                                <div style="font-size:11px;color:var(--text3)">Ward 68 · Dengue</div>
+                            </div>
+                            <div style="text-align:right">
+                                <div style="font-size:22px;font-weight:700;color:var(--red)">74</div>
+                                <div
+                                    style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:0.06em">
+                                    High</div>
+                            </div>
+                        </div>
+                        <div
+                            style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(196,135,10,0.08);border:1px solid rgba(196,135,10,0.2);border-radius:10px">
+                            <div>
+                                <div style="font-size:13px;font-weight:500">Whitefield</div>
+                                <div style="font-size:11px;color:var(--text3)">Ward 85 · Dengue</div>
+                            </div>
+                            <div style="text-align:right">
+                                <div style="font-size:22px;font-weight:700;color:var(--amber)">52</div>
+                                <div
+                                    style="font-size:10px;color:var(--amber);text-transform:uppercase;letter-spacing:0.06em">
+                                    Medium</div>
+                            </div>
+                        </div>
+                        <div
+                            style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(29,185,122,0.08);border:1px solid rgba(29,185,122,0.2);border-radius:10px">
+                            <div>
+                                <div style="font-size:13px;font-weight:500">Jayanagar</div>
+                                <div style="font-size:11px;color:var(--text3)">Ward 50 · Dengue</div>
+                            </div>
+                            <div style="text-align:right">
+                                <div style="font-size:22px;font-weight:700;color:var(--teal)">18</div>
+                                <div
+                                    style="font-size:10px;color:var(--teal);text-transform:uppercase;letter-spacing:0.06em">
+                                    Low</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);font-size:12px;color:var(--text3)">
+                        Updated 6:02 AM · Model v1-ml-hybrid · ROC-AUC 0.96
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- HOW IT WORKS -->
+    <section id="howitworks">
+        <div class="container">
+            <div class="section-tag">How It Works</div>
+            <h2 class="section-title reveal">Five layers. One intelligence pipeline.</h2>
+            <p class="section-sub reveal reveal-delay-1">From raw government records and live weather signals to a 0–100
+                ward-level risk score — every day, automatically.</p>
+            <div class="pipeline reveal reveal-delay-2">
+                <div class="pipe-step active">
+                    <div class="pipe-icon">🌦️</div>
+                    <div class="pipe-title">Weather</div>
+                    <div class="pipe-sub">OpenWeatherMap 5-day forecast · rainfall, humidity, temp</div>
+                </div>
+                <div class="pipe-step">
+                    <div class="pipe-icon">📊</div>
+                    <div class="pipe-title">Health Data</div>
+                    <div class="pipe-sub">Karnataka govt records · 2018–2021 · 9,504 training rows</div>
+                </div>
+                <div class="pipe-step">
+                    <div class="pipe-icon">🧠</div>
+                    <div class="pipe-title">ML Model</div>
+                    <div class="pipe-sub">XGBoost classifier · 7 features · ROC-AUC 0.96</div>
+                </div>
+                <div class="pipe-step">
+                    <div class="pipe-icon">🗄️</div>
+                    <div class="pipe-title">Pipeline</div>
+                    <div class="pipe-sub">FastAPI + Supabase · daily cron · 198 wards in &lt;30s</div>
+                </div>
+                <div class="pipe-step">
+                    <div class="pipe-icon">📍</div>
+                    <div class="pipe-title">Map UI</div>
+                    <div class="pipe-sub">Leaflet choropleth · live colours · ward drill-down</div>
+                </div>
+            </div>
+            <div style="margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px"
+                class="reveal reveal-delay-3">
+                <div
+                    style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px">
+                    <div style="font-size:28px;font-weight:700;color:var(--teal);letter-spacing:-0.03em">0.96</div>
+                    <div style="font-size:12px;color:var(--text3);margin-top:4px">ROC-AUC Score</div>
+                    <div style="font-size:13px;color:var(--text2);margin-top:8px">Model validation on held-out Karnataka
+                        data</div>
+                </div>
+                <div
+                    style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px">
+                    <div style="font-size:28px;font-weight:700;color:var(--blue);letter-spacing:-0.03em">9,504</div>
+                    <div style="font-size:12px;color:var(--text3);margin-top:4px">Training samples</div>
+                    <div style="font-size:13px;color:var(--text2);margin-top:8px">198 wards × 48 months of historical
+                        data</div>
+                </div>
+                <div
+                    style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px">
+                    <div style="font-size:28px;font-weight:700;color:var(--amber);letter-spacing:-0.03em">&lt;30s</div>
+                    <div style="font-size:12px;color:var(--text3);margin-top:4px">Daily pipeline runtime</div>
+                    <div style="font-size:13px;color:var(--text2);margin-top:8px">Full city refresh, every morning at 6
+                        AM</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- FEATURES -->
+    <section id="features">
+        <div class="container">
+            <div class="section-tag">Features</div>
+            <h2 class="section-title reveal">Everything your city needs.<br />Nothing it doesn't.</h2>
+            <div class="features-grid">
+                <div class="feat-card reveal">
+                    <div class="feat-icon">🧬</div>
+                    <div class="feat-title">XGBoost ML Model</div>
+                    <div class="feat-desc">Trained on real Parliamentary health records (RS Session 255). Dengue
+                        prediction with 0.96 ROC-AUC. Rainfall 14-day lag as dominant signal.</div>
+                    <span class="feat-tag">ML — Dengue</span>
+                </div>
+                <div class="feat-card reveal reveal-delay-1">
+                    <div class="feat-icon">⚖️</div>
+                    <div class="feat-title">Hybrid Rule Engine</div>
+                    <div class="feat-desc">11 additional diseases scored using calibrated weather threshold models.
+                        Heatstroke, Cholera, Cold, COPD — each with season-aware logic.</div>
+                    <span class="feat-tag">Rule-based</span>
+                </div>
+                <div class="feat-card reveal reveal-delay-2">
+                    <div class="feat-icon">🌡️</div>
+                    <div class="feat-title">Live Weather Integration</div>
+                    <div class="feat-desc">Real-time OpenWeatherMap data: rainfall 7-day, 14-day lag, temperature,
+                        humidity, consecutive rain days — updated daily at 5:30 AM.</div>
+                    <span class="feat-tag">OpenWeatherMap</span>
+                </div>
+                <div class="feat-card reveal reveal-delay-1">
+                    <div class="feat-icon">🔔</div>
+                    <div class="feat-title">Smart Alert System</div>
+                    <div class="feat-desc">Subscribers receive SMS or email the moment their ward crosses the risk
+                        threshold. Deduplication ensures one alert per day maximum.</div>
+                    <span class="feat-tag">Twilio + Gmail</span>
+                </div>
+                <div class="feat-card reveal reveal-delay-2">
+                    <div class="feat-icon">🤖</div>
+                    <div class="feat-title">AI Health Advisor</div>
+                    <div class="feat-desc">Grok AI checks online health sources every morning and generates
+                        plain-language explanations for ward-level risk. English + Kannada.</div>
+                    <span class="feat-tag">Grok-2</span>
+                </div>
+                <div class="feat-card reveal reveal-delay-3">
+                    <div class="feat-icon">👥</div>
+                    <div class="feat-title">Community Intelligence</div>
+                    <div class="feat-desc">Citizens report mosquito breeding spots on the map. Every report increases
+                        that ward's risk signal for the next morning's model run.</div>
+                    <span class="feat-tag">Crowdsourced</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- LIVE VISUALIZATION -->
+    <section id="live">
+        <div class="container">
+            <div class="section-tag">Live System</div>
+            <h2 class="section-title reveal">The system runs every morning.<br />Automatically.</h2>
+            <p class="section-sub reveal reveal-delay-1">Current city-wide disease intelligence dashboard — refreshed
+                daily at 6 AM IST.</p>
+
+            <div class="ticker-card reveal reveal-delay-1" style="margin-top:32px">
+                <div class="ticker-icon">⚡</div>
+                <div>
+                    <div class="ticker-label">Active Health Advisory</div>
+                    <div class="ticker-text" id="ticker-text">Loading health intelligence...</div>
+                </div>
+                <div class="ticker-badge" id="ticker-badge">LIVE</div>
+            </div>
+
+            <div style="margin-top:16px" class="reveal reveal-delay-2">
+                <div class="disease-row" id="disease-row"></div>
+            </div>
+
+            <div class="live-layout" style="margin-top:24px">
+                <div class="live-col">
+                    <div class="stat-card reveal">
+                        <div class="stat-info">
+                            <div class="stat-label">High-risk wards today</div>
+                            <div class="stat-val red" id="live-high">—</div>
+                            <div class="stat-change" id="live-high-change">Calculating...</div>
+                        </div>
+                        <div class="stat-badge badge-red">🔴</div>
+                    </div>
+                    <div class="stat-card reveal reveal-delay-1">
+                        <div class="stat-info">
+                            <div class="stat-label">Medium-risk wards</div>
+                            <div class="stat-val amber" id="live-medium">—</div>
+                            <div class="stat-change" style="color:var(--amber)" id="live-medium-change">Calculating...
+                            </div>
+                        </div>
+                        <div class="stat-badge badge-amber">🟡</div>
+                    </div>
+                    <div class="stat-card reveal reveal-delay-2">
+                        <div class="stat-info">
+                            <div class="stat-label">Pipeline last run</div>
+                            <div class="stat-val teal" style="font-size:20px" id="live-time">—</div>
+                            <div class="stat-change">Daily cron active</div>
+                        </div>
+                        <div class="stat-badge badge-teal">✓</div>
+                    </div>
+                    <div class="stat-card reveal reveal-delay-3">
+                        <div class="stat-info">
+                            <div class="stat-label">Community reports (7d)</div>
+                            <div class="stat-val" style="color:var(--blue)" id="live-reports">—</div>
+                            <div class="stat-change" style="color:var(--blue)">Feeding next model run</div>
+                        </div>
+                        <div class="stat-badge badge-blue">📍</div>
+                    </div>
+                </div>
+                <div class="live-col">
+                    <div class="mini-map-card reveal">
+                        <div class="mini-map-title">
+                            <div class="live-dot"></div>
+                            Real-time Ward Risk Analytics (Demo Mode)
+                        </div>
+                        <div id="live-map"></div>
+                    </div>
+                    <div class="chart-card reveal reveal-delay-1">
+                        <div class="chart-title">
+                            <span>Dengue risk trend — Koramangala</span>
+                            <span class="chart-period">30 days</span>
+                        </div>
+                        <div class="spark-chart">
+                            <canvas id="sparkCanvas" style="width:100%;height:100%"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- AI SECTION -->
+    <section id="ai">
+        <div class="container">
+            <div class="section-tag">AI Engine</div>
+            <h2 class="section-title reveal">Grok explains the risk.<br />Not just the number.</h2>
+            <p class="section-sub reveal reveal-delay-1">Every ward risk score comes with AI-generated context. Grok
+                searches live health sources every morning and translates weather + data signals into plain language.
+            </p>
+            <div class="ai-layout">
+                <div class="reveal">
+                    <div class="ai-card">
+                        <div class="ai-card-header">
+                            <div class="ai-avatar">🤖</div>
+                            <div>
+                                <div class="ai-name">NeighborHealth AI</div>
+                                <div class="ai-model">Powered by Grok-2 · Web search enabled</div>
+                            </div>
+                            <div
+                                style="margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse-dot 1.5s infinite">
+                            </div>
+                        </div>
+                        <div class="ai-bubble user">Ward 68 — Koramangala. Why is the dengue risk high today?</div>
+                        <div class="ai-bubble" id="ai-typing-bubble">Koramangala has a <strong>high dengue risk
+                                (74/100)</strong> today. Three signals converged: 18.4mm of rainfall over the last 7
+                            days created stagnant water near drainage channels, October's post-monsoon peak brings
+                            historically elevated case counts in this zone, and 3 community breeding spot reports were
+                            filed this week — all pointing to active vector presence.</div>
+                    </div>
+                    <div style="margin-top:16px">
+                        <div
+                            style="font-size:12px;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.06em">
+                            Contributing signals</div>
+                        <ul class="reasons-list-demo">
+                            <li class="reason-item-demo">
+                                <div class="reason-dot red"></div>Rainfall 18.4mm last 7 days — 2.1× above October
+                                average
+                            </li>
+                            <li class="reason-item-demo">
+                                <div class="reason-dot red"></div>October post-monsoon seasonal peak — historically
+                                highest risk month
+                            </li>
+                            <li class="reason-item-demo">
+                                <div class="reason-dot amber"></div>3 breeding spot reports near BBMP drainage
+                                complaints
+                            </li>
+                            <li class="reason-item-demo">
+                                <div class="reason-dot"></div>Temperature 24.8°C — optimal for Aedes aegypti breeding
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="reveal reveal-delay-2">
+                    <div style="font-size:13px;font-weight:500;color:var(--text2);margin-bottom:16px">Prevention
+                        advisory</div>
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                        <div
+                            style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px">
+                            <div
+                                style="font-size:12px;color:var(--teal);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">
+                                Immediate actions</div>
+                            <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+                                <li style="font-size:14px;display:flex;gap:10px"><span>•</span>Remove water from flower
+                                    pots, coolers, tyres</li>
+                                <li style="font-size:14px;display:flex;gap:10px"><span>•</span>Use mosquito repellent
+                                    during 6–8 AM and 6–8 PM</li>
+                                <li style="font-size:14px;display:flex;gap:10px"><span>•</span>Report stagnant water to
+                                    BBMP: 1533</li>
+                            </ul>
+                        </div>
+                        <div
+                            style="background:rgba(201,75,44,0.06);border:1px solid rgba(201,75,44,0.15);border-radius:var(--r);padding:18px">
+                            <div
+                                style="font-size:12px;color:var(--red);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">
+                                Watch for symptoms</div>
+                            <div style="font-size:14px;color:var(--text2);line-height:1.6">High fever, severe headache,
+                                joint pain, rash. Seek medical attention within 48 hours of symptom onset — early
+                                treatment significantly improves outcomes.</div>
+                        </div>
+                        <div
+                            style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px">
+                            <div
+                                style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">
+                                Data sources</div>
+                            <div style="font-size:13px;color:var(--text2)">Karnataka Parliamentary health records ·
+                                OpenWeatherMap · BBMP SWM complaints · Community reports</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- TECH STACK -->
+    <section id="tech">
+        <div class="container">
+            <div class="section-tag">Technology</div>
+            <h2 class="section-title reveal">Built on production-grade infrastructure</h2>
+            <div class="tech-grid">
+                <div class="tech-card reveal">
+                    <div class="tech-logo">⚡</div>
+                    <div class="tech-name">FastAPI</div>
+                    <div class="tech-role">Backend · REST APIs · Cron pipeline</div>
+                </div>
+                <div class="tech-card reveal reveal-delay-1">
+                    <div class="tech-logo">🗄️</div>
+                    <div class="tech-name">Supabase</div>
+                    <div class="tech-role">PostgreSQL · 9 tables · Real-time queries</div>
+                </div>
+                <div class="tech-card reveal reveal-delay-2">
+                    <div class="tech-logo">🌿</div>
+                    <div class="tech-name">XGBoost</div>
+                    <div class="tech-role">ML model · 9 features · ROC-AUC 0.96</div>
+                </div>
+                <div class="tech-card reveal reveal-delay-3">
+                    <div class="tech-logo">🗺️</div>
+                    <div class="tech-name">Leaflet.js</div>
+                    <div class="tech-role">Map UI · GeoJSON · Ward choropleth</div>
+                </div>
+                <div class="tech-card reveal">
+                    <div class="tech-logo">🌦️</div>
+                    <div class="tech-name">OpenWeatherMap</div>
+                    <div class="tech-role">5-day forecast · Rainfall · Humidity</div>
+                </div>
+                <div class="tech-card reveal reveal-delay-1">
+                    <div class="tech-logo">🤖</div>
+                    <div class="tech-name">Grok-2</div>
+                    <div class="tech-role">AI explanations · Web search · Kannada</div>
+                </div>
+                <div class="tech-card reveal reveal-delay-2">
+                    <div class="tech-logo">🔥</div>
+                    <div class="tech-name">Firebase</div>
+                    <div class="tech-role">Auth · Push notifications · User management</div>
+                </div>
+                <div class="tech-card reveal reveal-delay-3">
+                    <div class="tech-logo">📡</div>
+                    <div class="tech-name">Twilio + Gmail</div>
+                    <div class="tech-role">SMS alerts · Email notifications · Dedup</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- FUTURE -->
+    <section id="future">
+        <div class="container">
+            <div class="section-tag">Future Scope</div>
+            <h2 class="section-title reveal">From Bengaluru to every city.<br />From disease to every risk.</h2>
+            <div class="future-grid">
+                <div class="future-card reveal">
+                    <div class="future-num">01 — Smart Cities</div>
+                    <div class="future-title">Pan-India ward intelligence</div>
+                    <div class="future-text">The same pipeline works for any Indian city with ward-level administrative
+                        data. Mumbai, Chennai, Delhi — identical architecture, new data sources.</div>
+                </div>
+                <div class="future-card reveal reveal-delay-1">
+                    <div class="future-num">02 — IoT Integration</div>
+                    <div class="future-title">Sensor-grade accuracy</div>
+                    <div class="future-text">Connect BBMP IoT drainage sensors, AQI monitors, and smart water-level
+                        sensors directly into the feature pipeline — replacing proxy signals with ground truth.</div>
+                </div>
+                <div class="future-card reveal reveal-delay-2">
+                    <div class="future-num">03 — Hospital Networks</div>
+                    <div class="future-title">Real-time case surveillance</div>
+                    <div class="future-text">Direct integration with hospital admission data to close the feedback loop
+                        — actual case counts per ward feeding back into model training daily.</div>
+                </div>
+                <div class="future-card reveal reveal-delay-1">
+                    <div class="future-num">04 — Predictive Dispatch</div>
+                    <div class="future-title">BBMP resource allocation</div>
+                    <div class="future-text">API access for municipal health workers — auto-route fogging teams, vector
+                        control, and medical camps to high-risk wards before outbreak peaks.</div>
+                </div>
+                <div class="future-card reveal reveal-delay-2">
+                    <div class="future-num">05 — Personal Health</div>
+                    <div class="future-title">Wearable + location-aware</div>
+                    <div class="future-text">Mobile app integration with wearable health data. Personalised risk
+                        assessment based on individual health conditions and real-time GPS location.</div>
+                </div>
+                <div class="future-card reveal reveal-delay-3">
+                    <div class="future-num">06 — Government API</div>
+                    <div class="future-title">Public health infrastructure</div>
+                    <div class="future-text">Open API for BBMP, KSPCB, and NHM Karnataka — turning NeighborHealth into a
+                        shared intelligence layer for all public health programs in the state.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- CTA -->
+    <section id="cta">
+        <div class="cta-glow"></div>
+        <div class="container" style="position:relative;z-index:1">
+            <div class="section-tag" style="justify-content:center">Ready to explore</div>
+            <h2 class="cta-title reveal">Your neighbourhood.<br /><span
+                    style="background:linear-gradient(135deg,#1db97a,#2d8ef0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Your
+                    risk. Your alert.</span></h2>
+            <p class="cta-sub reveal reveal-delay-1">Open the live map. Find your ward. Subscribe to alerts.
+                NeighborHealth is free, open, and running right now.</p>
+            <div class="cta-actions reveal reveal-delay-2">
+                <a href="login.html" class="btn-launch" id="launch-btn">
+                    Launch NeighborHealth
+                    <span class="launch-arrow">→</span>
+                </a>
+                <button class="btn-launch-secondary"
+                    onclick="document.getElementById('howitworks').scrollIntoView({behavior:'smooth'})">
+                    Learn how it works
+                </button>
+            </div>
+            <div style="margin-top:48px;display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap"
+                class="reveal reveal-delay-3">
+                <div style="text-align:center">
+                    <div style="font-size:24px;font-weight:700;color:var(--teal)">198</div>
+                    <div style="font-size:12px;color:var(--text3);margin-top:4px">BBMP Wards</div>
+                </div>
+                <div style="width:1px;height:40px;background:var(--border)"></div>
+                <div style="text-align:center">
+                    <div style="font-size:24px;font-weight:700;color:var(--blue)">12</div>
+                    <div style="font-size:12px;color:var(--text3);margin-top:4px">Diseases tracked</div>
+                </div>
+                <div style="width:1px;height:40px;background:var(--border)"></div>
+                <div style="text-align:center">
+                    <div style="font-size:24px;font-weight:700;color:var(--amber)">7–10</div>
+                    <div style="font-size:12px;color:var(--text3);margin-top:4px">Days ahead</div>
+                </div>
+                <div style="width:1px;height:40px;background:var(--border)"></div>
+                <div style="text-align:center">
+                    <div style="font-size:24px;font-weight:700;color:var(--red)">0.96</div>
+                    <div style="font-size:12px;color:var(--text3);margin-top:4px">Model accuracy</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-logo">
+            <div class="nav-dot"></div>
+            NeighborHealth
+        </div>
+        <div class="footer-meta">Built for Build for Bengaluru Hackathon · 2026 · Disease Prevention theme</div>
+        <div class="footer-links">
+            <a href="#hero">Back to top</a>
+            <a href="http://localhost:3000" target="_blank">Open App</a>
+        </div>
+    </footer>
+
+    <script>
+        // ── HERO CANVAS PARTICLES ──
+        (function () {
+            const canvas = document.getElementById('heroCanvas');
+            const ctx = canvas.getContext('2d');
+            let W, H, particles = [], animId;
+
+            function resize() {
+                W = canvas.width = canvas.offsetWidth;
+                H = canvas.height = canvas.offsetHeight;
+            }
+
+            function createParticle() {
+                return {
+                    x: Math.random() * W,
+                    y: Math.random() * H,
+                    r: Math.random() * 1.5 + 0.3,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    alpha: Math.random() * 0.5 + 0.1,
+                    color: Math.random() > 0.6 ? '#1db97a' : Math.random() > 0.5 ? '#2d8ef0' : '#ffffff',
+                };
+            }
+
+            function init() {
+                resize();
+                particles = Array.from({ length: 120 }, createParticle);
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                particles.forEach(p => {
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > W) p.vx *= -1;
+                    if (p.y < 0 || p.y > H) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.fill();
+                });
+                // Draw connections
+                ctx.globalAlpha = 0.06;
+                ctx.strokeStyle = '#1db97a';
+                ctx.lineWidth = 0.5;
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const d = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
+                        if (d < 80) {
+                            ctx.globalAlpha = 0.06 * (1 - d / 80);
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                ctx.globalAlpha = 1;
+                animId = requestAnimationFrame(draw);
+            }
+
+            init();
+            draw();
+            window.addEventListener('resize', init);
+        })();
+
+        // ── REVEAL ON SCROLL ──
+        (function () {
+            const els = document.querySelectorAll('.reveal');
+            const io = new IntersectionObserver(entries => {
+                entries.forEach(e => {
+                    if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+                });
+            }, { threshold: 0.12 });
+            els.forEach(el => io.observe(el));
+        })();
+
+        // ── COUNTERS ──
+        function animateCounter(el, target, suffix = '', duration = 1800) {
+            let start = null;
+            const step = ts => {
+                if (!start) start = ts;
+                const progress = Math.min((ts - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.floor(eased * target).toLocaleString() + suffix;
+                if (progress < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+        }
+
+        const io2 = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    animateCounter(document.getElementById('counter1'), 16986);
+                    animateCounter(document.getElementById('counter2'), 198);
+                    animateCounter(document.getElementById('counter3'), 14, ' days');
+                    animateCounter(document.getElementById('counter4'), 68, '%');
+                    io2.disconnect();
+                }
+            });
+        }, { threshold: 0.3 });
+        const problemSection = document.getElementById('problem');
+        if (problemSection) io2.observe(problemSection);
+
+        // ── LIVE STATS SIMULATION ──
+        (function () {
+            const month = new Date().getMonth() + 1;
+            const isMonsoon = month >= 6 && month <= 11;
+            const isSummer = month >= 3 && month <= 6;
+
+            const HIGH = isMonsoon ? 23 : isSummer ? 31 : 8;
+            const MED = isMonsoon ? 47 : isSummer ? 52 : 29;
+            const TIME = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' IST';
+
+            const tickers = isMonsoon
+                ? ['Dengue risk elevated in North Bengaluru — 23 wards above threshold']
+                : isSummer
+                    ? ['Heatstroke advisory: 31 wards at high risk — temperatures above 35°C']
+                    : ['Respiratory disease risk moderate — winter conditions detected'];
+
+            const badgeText = isMonsoon ? 'DENGUE ALERT' : isSummer ? 'HEAT ADVISORY' : 'ADVISORY';
+            const badgeColor = isMonsoon ? '#c94b2c' : isSummer ? '#c4870a' : '#2d8ef0';
+
+            function setLiveStats() {
+                const hEl = document.getElementById('live-high');
+                const mEl = document.getElementById('live-medium');
+                if (hEl) { animateCounter(hEl, HIGH); }
+                if (mEl) { animateCounter(mEl, MED); }
+                const tEl = document.getElementById('live-time');
+                if (tEl) tEl.textContent = TIME;
+                const rEl = document.getElementById('live-reports');
+                if (rEl) { animateCounter(rEl, 14); }
+                const hcEl = document.getElementById('live-high-change');
+                if (hcEl) hcEl.textContent = isMonsoon ? '↑ 3 from yesterday' : isSummer ? '↑ 5 from yesterday' : '↓ 2 from yesterday';
+                const mcEl = document.getElementById('live-medium-change');
+                if (mcEl) mcEl.textContent = 'Stable';
+                const tickerEl = document.getElementById('ticker-text');
+                if (tickerEl) tickerEl.textContent = tickers[0];
+                const badgeEl = document.getElementById('ticker-badge');
+                if (badgeEl) { badgeEl.textContent = badgeText; badgeEl.style.background = badgeColor; }
+            }
+
+            const io3 = new IntersectionObserver(e => {
+                if (e[0].isIntersecting) { setLiveStats(); io3.disconnect(); }
+            }, { threshold: 0.2 });
+            const liveSection = document.getElementById('live');
+            if (liveSection) io3.observe(liveSection);
+        })();
+
+        // ── DISEASE PILLS ──
+        (function () {
+            const diseases = [
+                { id: 'dengue', label: 'Dengue', score: 74, level: 'high' },
+                { id: 'malaria', label: 'Malaria', score: 52, level: 'medium' },
+                { id: 'heatstroke', label: 'Heatstroke', score: 31, level: 'low' },
+                { id: 'cholera', label: 'Cholera', score: 28, level: 'low' },
+                { id: 'typhoid', label: 'Typhoid', score: 35, level: 'low' },
+                { id: 'cold', label: 'Common Cold', score: 18, level: 'low' },
+                { id: 'copd', label: 'COPD', score: 22, level: 'low' },
+                { id: 'bronchitis', label: 'Bronchitis', score: 19, level: 'low' },
+            ];
+            const container = document.getElementById('disease-row');
+            if (!container) return;
+            diseases.forEach(d => {
+                const colorMap = { high: '#c94b2c', medium: '#c4870a', low: '#1db97a' };
+                const el = document.createElement('div');
+                el.className = 'dis-card';
+                el.innerHTML = `
+      <div class="dis-name">${d.label}</div>
+      <div class="dis-score" style="color:${colorMap[d.level]}">${d.score}</div>
+      <div class="dis-level ${d.level}">${d.level}</div>
+    `;
+                container.appendChild(el);
+            });
+        })();
+
+        // ── WARD GRID ──
+        // ── LIVE BENGALURU MAP (DEMO) ──
+        (async function () {
+            const mapEl = document.getElementById('live-map');
+            if (!mapEl) return;
+
+            // 1. Initialize Leaflet in STATIC mode
+            const map = L.map('live-map', {
+                zoomControl: false,
+                dragging: false,
+                touchZoom: false,
+                doubleClickZoom: false,
+                scrollWheelZoom: false,
+                boxZoom: false,
+                keyboard: false,
+                attributionControl: false
+            }).setView([12.9716, 77.5946], 11);
+
+            // 2. Add Dark Theme Tiles
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            // 3. Fetch Wards GeoJSON
+            try {
+                const response = await fetch('assets/bengaluru-wards.geojson');
+                const data = await response.json();
+
+                // 4. Helper for random "demo" color
+                const getDemoStyle = () => {
+                    const r = Math.random();
+                    let color = '#1db97a'; // Low (Green)
+                    if (r < 0.15) color = '#c94b2c'; // High (Red)
+                    else if (r < 0.45) color = '#c4870a'; // Medium (Amber)
+
+                    return {
+                        fillColor: color,
+                        weight: 0.8,
+                        opacity: 1,
+                        color: 'rgba(255,255,255,0.08)',
+                        fillOpacity: 0.55
+                    };
+                };
+
+                // 5. Add Wards Layer
+                L.geoJSON(data, {
+                    style: getDemoStyle,
+                    onEachFeature: (feature, layer) => {
+                        // Ensure no interaction
+                        layer.on('click', (e) => {
+                            if (e.originalEvent) e.originalEvent.preventDefault();
+                        });
+                    }
+                }).addTo(map);
+
+                // Small animation: Occasionally change a ward's color to show it's "live"
+                setInterval(() => {
+                    const layers = [];
+                    map.eachLayer(l => { if (l.feature) layers.push(l); });
+                    if (layers.length > 0) {
+                        const randomLayer = layers[Math.floor(Math.random() * layers.length)];
+                        randomLayer.setStyle(getDemoStyle());
+                    }
+                }, 1500);
+
+            } catch (err) {
+                console.error("Failed to load dashboard demo map:", err);
+                mapEl.innerHTML = '<div style="color:var(--text3);text-align:center;padding:100px 20px;font-size:12px">Map visualization temporarily unavailable</div>';
+            }
+        })();
+
+        // ── SPARK CHART ──
+        (function () {
+            const canvas = document.getElementById('sparkCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            function drawChart() {
+                const W = canvas.offsetWidth;
+                const H = canvas.offsetHeight;
+                canvas.width = W;
+                canvas.height = H;
+
+                // Generate 30-day data (seasonal pattern)
+                const month = new Date().getMonth() + 1;
+                const baseRisk = month >= 9 && month <= 11 ? 70 : month >= 6 ? 40 : 15;
+                const data = Array.from({ length: 30 }, (_, i) => {
+                    return Math.min(100, Math.max(0, baseRisk + (Math.random() - 0.4) * 25 + Math.sin(i / 3) * 10));
+                });
+
+                const minV = 0, maxV = 100;
+                const pad = 8;
+                const toX = i => pad + (i / (data.length - 1)) * (W - pad * 2);
+                const toY = v => H - pad - ((v - minV) / (maxV - minV)) * (H - pad * 2);
+
+                // Area fill
+                const grad = ctx.createLinearGradient(0, 0, 0, H);
+                grad.addColorStop(0, 'rgba(29,185,122,0.3)');
+                grad.addColorStop(1, 'rgba(29,185,122,0)');
+                ctx.beginPath();
+                ctx.moveTo(toX(0), toY(data[0]));
+                data.forEach((_, i) => {
+                    if (i === 0) return;
+                    const x0 = toX(i - 1), y0 = toY(data[i - 1]);
+                    const x1 = toX(i), y1 = toY(data[i]);
+                    const cpx = (x0 + x1) / 2;
+                    ctx.bezierCurveTo(cpx, y0, cpx, y1, x1, y1);
+                });
+                ctx.lineTo(toX(data.length - 1), H);
+                ctx.lineTo(toX(0), H);
+                ctx.closePath();
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                // Line
+                ctx.beginPath();
+                ctx.moveTo(toX(0), toY(data[0]));
+                data.forEach((_, i) => {
+                    if (i === 0) return;
+                    const x0 = toX(i - 1), y0 = toY(data[i - 1]), x1 = toX(i), y1 = toY(data[i]);
+                    ctx.bezierCurveTo((x0 + x1) / 2, y0, (x0 + x1) / 2, y1, x1, y1);
+                });
+                ctx.strokeStyle = '#1db97a';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Last dot
+                const lx = toX(data.length - 1), ly = toY(data[data.length - 1]);
+                ctx.beginPath(); ctx.arc(lx, ly, 3, 0, Math.PI * 2);
+                ctx.fillStyle = '#1db97a'; ctx.fill();
+            }
+
+            const io4 = new IntersectionObserver(e => {
+                if (e[0].isIntersecting) { drawChart(); io4.disconnect(); }
+            }, { threshold: 0.2 });
+            const liveSection = document.getElementById('live');
+            if (liveSection) io4.observe(liveSection);
+            window.addEventListener('resize', drawChart);
+        })();
+
+        // ── PIPELINE STEP ANIMATION ──
+        (function () {
+            const steps = document.querySelectorAll('.pipe-step');
+            let current = 0;
+            setInterval(() => {
+                steps.forEach(s => s.classList.remove('active'));
+                steps[current].classList.add('active');
+                current = (current + 1) % steps.length;
+            }, 1200);
+        })();
+
+        // ── AI TYPING EFFECT ──
+        (function () {
+            const el = document.getElementById('ai-typing-bubble');
+            if (!el) return;
+            const text = el.innerHTML;
+            el.innerHTML = '';
+            let i = 0;
+            const io5 = new IntersectionObserver(entries => {
+                if (!entries[0].isIntersecting) return;
+                io5.disconnect();
+                const timer = setInterval(() => {
+                    el.innerHTML = text.slice(0, i);
+                    i += 3;
+                    if (i >= text.length) { el.innerHTML = text; clearInterval(timer); }
+                }, 12);
+            }, { threshold: 0.5 });
+            io5.observe(el);
+        })();
+
+        // ── LAUNCH BUTTON URL ──
+        document.getElementById('launch-btn').addEventListener('click', function (e) {
+            const url = this.href;
+            // Allow customisation — default is localhost:3000
+        });
+
+        // ── PROBLEM CANVAS: scroll-hijack frame animation ──
+        // Page scroll is BLOCKED while canvas is visible + frames loading/playing.
+        // Wheel / touch events advance frames. Page resumes after last frame.
+        (function () {
+            var FRAME_COUNT = 144;
+            var BASE_PATH = 'assets/photos/frame_';
+
+            function frameSrc(i) {
+                return BASE_PATH + ('000' + i).slice(-3) + '_delay-0.055s.png';
+            }
+
+            var wrap = document.getElementById('problemCanvasWrap');
+            var canvas = document.getElementById('problemCanvas');
+            var loader = document.getElementById('pvLoader');
+            var bar = document.getElementById('pvLoaderBar');
+            var hint = document.getElementById('pvScrollHint');
+            var progBar = document.getElementById('pvProgressBar');
+            if (!wrap || !canvas) return;
+
+            var ctx = canvas.getContext('2d');
+            var images = new Array(FRAME_COUNT);
+            var frameLoaded = new Array(FRAME_COUNT).fill(false);
+            var totalLoaded = 0;
+            var allLoaded = false;
+            var displayedFrame = 0;   // float — accumulated scroll
+            var animDone = false; // true once frame 143 reached
+            var scrollLocked = false;
+            var frameAccum = 0;     // accumulated wheel delta (px)
+
+            // ── Size canvas to fill the wrap exactly (now 100vw/100vh) ──
+            function sizeCanvas() {
+                var w = window.innerWidth;
+                var h = window.innerHeight;
+                if (canvas.width !== w || canvas.height !== h) {
+                    canvas.width = w;
+                    canvas.height = h;
+                }
+            }
+
+            // ── Draw frame: Full Screen Stretch (No Cropping / No Zoom) ──
+            function drawFrame(idx) {
+                idx = Math.max(0, Math.min(FRAME_COUNT - 1, Math.round(idx)));
+                var t = idx;
+                while (t >= 0 && !frameLoaded[t]) t--;
+                if (t < 0) return;
+                var img = images[t];
+                if (!img || !img.naturalWidth) return;
+
+                var cw = canvas.width, ch = canvas.height;
+                ctx.clearRect(0, 0, cw, ch);
+                // Stretch to fill screen as requested (True Full Screen, No Cut)
+                ctx.drawImage(img, 0, 0, cw, ch);
+
+                // Update progress bar
+                if (progBar) progBar.style.width = Math.round(idx / (FRAME_COUNT - 1) * 100) + '%';
+            }
+
+            // ── Scroll lock / unlock ──
+            function lockScroll() {
+                if (scrollLocked) return;
+                // Only lock if we haven't finished the animation OR if we are scrolling back up
+                if (animDone && displayedFrame >= FRAME_COUNT - 1) return;
+
+                scrollLocked = true;
+                wrap.classList.add('scroll-locked');
+                document.body.style.overflow = 'hidden'; // Force absolute page lock
+                if (hint) hint.classList.add('hint-visible');
+
+                // Snap to view: ensure the canvas is fully visible and centered
+                var r = wrap.getBoundingClientRect();
+                var targetY = window.pageYOffset + r.top - (window.innerHeight - r.height) / 2;
+                window.scrollTo({ top: targetY, behavior: 'auto' });
+            }
+
+            function unlockScroll() {
+                if (!scrollLocked) return;
+                scrollLocked = false;
+                wrap.classList.remove('scroll-locked');
+                document.body.style.overflow = ''; // Release page lock
+                if (hint) hint.classList.remove('hint-visible');
+            }
+
+            // ── Wheel: advance frames, block page scroll ──
+            function onWheel(e) {
+                if (!scrollLocked) return;
+
+                // Absolute lock during preloading
+                if (!allLoaded) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
+
+                // Allow normal scroll if we reach boundaries
+                if (displayedFrame <= 0 && e.deltaY < 0) { unlockScroll(); return; }
+                if (displayedFrame >= FRAME_COUNT - 1 && e.deltaY > 0) {
+                    animDone = true;
+                    unlockScroll();
+                    return;
+                }
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                // 25px of wheel delta = 1 frame (slightly faster)
+                frameAccum += e.deltaY;
+                var frames = frameAccum > 0 ? Math.floor(frameAccum / 25) : Math.ceil(frameAccum / 25);
+                if (Math.abs(frames) >= 1) {
+                    frameAccum -= frames * 25;
+                    displayedFrame = Math.max(0, Math.min(FRAME_COUNT - 1, displayedFrame + frames));
+                    drawFrame(displayedFrame);
+
+                    // Reset animDone if we scroll back up
+                    if (displayedFrame < FRAME_COUNT - 1) animDone = false;
+                }
+            }
+
+            // ── Touch support ──
+            var touchY = 0;
+            function onTouchStart(e) { touchY = e.touches[0].clientY; }
+            function onTouchMove(e) {
+                if (!scrollLocked) return;
+
+                if (!allLoaded) {
+                    e.preventDefault();
+                    return;
+                }
+
+                var dy = touchY - e.touches[0].clientY;
+                if (displayedFrame <= 0 && dy < 0) { unlockScroll(); return; }
+                if (displayedFrame >= FRAME_COUNT - 1 && dy > 0) { animDone = true; unlockScroll(); return; }
+
+                e.preventDefault();
+                touchY = e.touches[0].clientY;
+                displayedFrame = Math.max(0, Math.min(FRAME_COUNT - 1, displayedFrame + dy / 25));
+                drawFrame(displayedFrame);
+                if (displayedFrame < FRAME_COUNT - 1) animDone = false;
+            }
+
+            // Capture phase: intercept before anything else
+            document.addEventListener('wheel', onWheel, { passive: false, capture: true });
+            document.addEventListener('touchstart', onTouchStart, { passive: true });
+            document.addEventListener('touchmove', onTouchMove, { passive: false });
+
+            // ── IntersectionObserver: reveal + lock when canvas starts entering view ──
+            var io = new IntersectionObserver(function (entries) {
+                var e = entries[0];
+                if (e.isIntersecting) {
+                    wrap.classList.add('pv-visible');
+                    // Trap IMMEDIATELY. User cannot skip until story is told.
+                    if (!animDone) lockScroll();
+                } else {
+                    unlockScroll();
+                }
+            }, { threshold: 0.15 }); // Lower threshold to catch it early
+            io.observe(wrap);
+
+            window.addEventListener('resize', function () {
+                sizeCanvas(); drawFrame(displayedFrame);
+            }, { passive: true });
+
+            // ── Preload all 144 frames ──
+            requestAnimationFrame(function () {
+                sizeCanvas();
+                for (var i = 0; i < FRAME_COUNT; i++) {
+                    (function (idx) {
+                        var img = new Image();
+                        images[idx] = img;
+                        img.onload = function () {
+                            frameLoaded[idx] = true;
+                            totalLoaded++;
+                            if (bar) bar.style.width = Math.round(totalLoaded / FRAME_COUNT * 100) + '%';
+                            if (idx === 0) { sizeCanvas(); drawFrame(0); }
+                            if (totalLoaded >= FRAME_COUNT) {
+                                allLoaded = true;
+                                if (loader) {
+                                    loader.style.transition = 'opacity 0.4s';
+                                    loader.style.opacity = '0';
+                                    setTimeout(function () { loader.style.display = 'none'; }, 450);
+                                }
+                                // Lock if canvas is already in view and not finished
+                                var r = wrap.getBoundingClientRect();
+                                var inView = r.top < window.innerHeight && r.bottom > 0;
+                                if (inView && !animDone) {
+                                    lockScroll();
+                                }
+                            }
+                        };
+                        img.onerror = function () { frameLoaded[idx] = true; totalLoaded++; };
+                        img.src = frameSrc(idx);
+                    })(i);
+                }
+            }); // close requestAnimationFrame
+
+            // ── NAV SPY: Highlight current section ──
+            (function () {
+                const navLinks = document.querySelectorAll('.nav-links a');
+                const sections = Array.from(navLinks).map(link => document.querySelector(link.getAttribute('href')));
+                const navObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting && entry.intersectionRatio >= 0.3) {
+                            const id = entry.target.getAttribute('id');
+                            navLinks.forEach(link => {
+                                link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+                            });
+                        }
+                    });
+                }, { threshold: [0.3, 0.6], rootMargin: '-10% 0% -40% 0%' });
+                sections.forEach(sec => { if (sec) navObserver.observe(sec); });
+            })();
+        })(); // close outer IIFE
+    </script>
+
+    <!-- ── FORCE FIELD BACKGROUND — Vanilla JS, no dependencies ── -->
+    <script>
+    (function() {
+        const canvas = document.getElementById('ff-canvas');
+        const ctx    = canvas.getContext('2d');
+
+        // Config
+        const SPACING      = 28;   // grid step (px)
+        const FORCE_R      = 160;  // mouse influence radius
+        const FORCE_STR    = 14;   // repulsion strength
+        const FRICTION     = 0.88; // velocity damping
+        const RESTORE      = 0.06; // spring constant
+        const HUE          = 158;  // teal hue matching --teal
+        const MIN_SIZE     = 1.2;
+        const MAX_SIZE     = 3.0;
+
+        let W, H, pts = [];
+        let mx = -9999, my = -9999; // mouse position (off-screen initially)
+
+        // ── Particle factory ──────────────────────────────────────────────
+        function Particle(ox, oy) {
+            this.ox  = ox;  // origin x
+            this.oy  = oy;  // origin y
+            this.x   = ox;
+            this.y   = oy;
+            this.vx  = 0;
+            this.vy  = 0;
+            // Vary brightness so the grid has depth
+            const brightness = 12 + Math.random() * 28; // 12-40%
+            const alpha      = 0.25 + Math.random() * 0.45;
+            this.color = `hsla(${HUE}, 70%, ${brightness}%, ${alpha})`;
+            this.size  = MIN_SIZE + Math.random() * (MAX_SIZE - MIN_SIZE);
+        }
+
+        // ── Build particle grid ───────────────────────────────────────────
+        function build() {
+            W = canvas.width  = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+            pts = [];
+            for (let y = SPACING; y < H; y += SPACING) {
+                for (let x = SPACING; x < W; x += SPACING) {
+                    // Add slight random jitter to break the rigid grid look
+                    const jx = x + (Math.random() - 0.5) * SPACING * 0.4;
+                    const jy = y + (Math.random() - 0.5) * SPACING * 0.4;
+                    pts.push(new Particle(jx, jy));
+                }
+            }
+        }
+
+        // ── Main animation loop ──────────────────────────────────────────
+        function tick() {
+            ctx.clearRect(0, 0, W, H);
+
+            // Background fill keeps existing body color
+            ctx.fillStyle = '#04040a';
+            ctx.fillRect(0, 0, W, H);
+
+            for (let i = 0; i < pts.length; i++) {
+                const p  = pts[i];
+                const dx = p.x - mx;
+                const dy = p.y - my;
+                const d  = Math.sqrt(dx * dx + dy * dy);
+
+                // ── Repulsion ────────────────────────────────
+                if (d < FORCE_R && d > 0) {
+                    const norm = 1 / d;
+                    // Strength falls off with distance
+                    const f = FORCE_STR * (1 - d / FORCE_R);
+                    p.vx += dx * norm * f;
+                    p.vy += dy * norm * f;
+                }
+
+                // ── Spring restore ───────────────────────────
+                p.vx += (p.ox - p.x) * RESTORE;
+                p.vy += (p.oy - p.y) * RESTORE;
+
+                // ── Friction ─────────────────────────────────
+                p.vx *= FRICTION;
+                p.vy *= FRICTION;
+
+                // ── Update position ──────────────────────────
+                p.x += p.vx;
+                p.y += p.vy;
+
+                // ── Glow near cursor ─────────────────────────
+                let size  = p.size;
+                let color = p.color;
+                if (d < FORCE_R) {
+                    const proximity = 1 - d / FORCE_R;
+                    size  = p.size + proximity * 3.5;
+                    // Brighter teal pulse near cursor
+                    const bright = Math.round(18 + proximity * 62);
+                    const a      = Math.min(1, 0.3 + proximity * 0.7);
+                    color = `hsla(${HUE}, 80%, ${bright}%, ${a})`;
+                }
+
+                // ── Draw dot ─────────────────────────────────
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+            }
+
+            requestAnimationFrame(tick);
+        }
+
+        // ── Track mouse (document-wide, but canvas is pointer-events:none) ──
+        document.addEventListener('mousemove', function(e) {
+            mx = e.clientX;
+            my = e.clientY;
+        });
+
+        // Reset when mouse leaves the window
+        document.addEventListener('mouseleave', function() {
+            mx = -9999;
+            my = -9999;
+        });
+
+        // ── Resize handling ───────────────────────────────────────────────
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(build, 200);
+        });
+
+        build();
+        requestAnimationFrame(tick);
+    })();
+    </script>
+    <script src="js/components/spider-hero.js"></script>
+    <script>
+        // 5. Spotlight Hover Effect JS for Bento Grid
+        document.addEventListener("DOMContentLoaded", () => {
+            const handleOnMouseMove = (e) => {
+                const target = e.currentTarget;
+                const rect = target.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                target.style.setProperty("--mouse-x", `${x}px`);
+                target.style.setProperty("--mouse-y", `${y}px`);
+            };
+
+            const cards = document.querySelectorAll(".feat-card");
+            for (const card of cards) {
+                card.addEventListener("mousemove", handleOnMouseMove);
+            }
+        });
+    </script>
+
+    <!-- ── Mobile Nav Hamburger JS ── -->
+    <script>
+      (function() {
+        var drawer   = document.getElementById('nav-drawer');
+        var hamburger = document.getElementById('nav-hamburger');
+        var isOpen   = false;
+
+        function openDrawer() {
+          isOpen = true;
+          drawer.style.display = 'flex';
+          // Force reflow then animate
+          requestAnimationFrame(function() {
+            drawer.classList.add('open');
+          });
+          hamburger.setAttribute('aria-expanded', 'true');
+          document.body.style.overflow = 'hidden';
+        }
+
+        function closeDrawer() {
+          isOpen = false;
+          drawer.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+          // Hide after transition
+          setTimeout(function() {
+            if (!isOpen) drawer.style.display = '';
+          }, 350);
+        }
+
+        window.toggleDrawer = function() { isOpen ? closeDrawer() : openDrawer(); };
+        window.closeDrawer  = closeDrawer;
+
+        // Close on outside click
+        document.addEventListener('click', function(e) {
+          if (isOpen && !drawer.contains(e.target) && !hamburger.contains(e.target)) {
+            closeDrawer();
+          }
+        });
+
+        // Close on ESC
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && isOpen) closeDrawer();
+        });
+
+        // Active nav link highlighting via IntersectionObserver
+        var sections  = document.querySelectorAll('section[id]');
+        var navLinks  = document.querySelectorAll('.nav-links a, .nav-mobile-drawer a:not(.nav-cta-mobile)');
+
+        if ('IntersectionObserver' in window && sections.length) {
+          var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+              if (entry.isIntersecting) {
+                navLinks.forEach(function(link) {
+                  link.classList.toggle(
+                    'active',
+                    link.getAttribute('href') === '#' + entry.target.id
+                  );
+                });
+              }
+            });
+          }, { rootMargin: '-40% 0px -55% 0px' });
+
+          sections.forEach(function(s) { observer.observe(s); });
+        }
+      })();
+    </script>
+</body>
+
+</html>

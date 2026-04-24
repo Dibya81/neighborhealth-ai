@@ -1,0 +1,42 @@
+# Web framework
+fastapi
+uvicorn[standard]
+
+# Settings & validation
+pydantic
+pydantic[email]
+pydantic-settings
+
+# Database
+supabase
+
+# HTTP client
+httpx
+
+# ML inference (core — model training uses these)
+pandas
+numpy
+scikit-learn
+xgboost
+joblib
+shap
+
+# AI Health Checker & Deep Learning
+torch
+torchvision
+torchaudio
+transformers
+librosa
+fastai
+safetensors
+
+# Notifications
+twilio
+
+# Utilities
+python-dotenv
+python-multipart
+
+# Dev / testing
+pytest
+pytest-asyncio

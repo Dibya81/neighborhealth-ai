@@ -1,0 +1,42 @@
+{
+  "architectures": [
+    "ViTForImageClassification"
+  ],
+  "attention_probs_dropout_prob": 0.0,
+  "dtype": "float32",
+  "encoder_stride": 16,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.0,
+  "hidden_size": 768,
+  "id2label": {
+    "0": "benign_keratosis-like_lesions",
+    "1": "basal_cell_carcinoma",
+    "2": "actinic_keratoses",
+    "3": "vascular_lesions",
+    "4": "melanocytic_Nevi",
+    "5": "melanoma",
+    "6": "dermatofibroma"
+  },
+  "image_size": 224,
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "label2id": {
+    "actinic_keratoses": 2,
+    "basal_cell_carcinoma": 1,
+    "benign_keratosis-like_lesions": 0,
+    "dermatofibroma": 6,
+    "melanocytic_Nevi": 4,
+    "melanoma": 5,
+    "vascular_lesions": 3
+  },
+  "layer_norm_eps": 1e-12,
+  "model_type": "vit",
+  "num_attention_heads": 12,
+  "num_channels": 3,
+  "num_hidden_layers": 12,
+  "patch_size": 16,
+  "pooler_act": "tanh",
+  "pooler_output_size": 768,
+  "qkv_bias": true,
+  "transformers_version": "5.5.4"
+}

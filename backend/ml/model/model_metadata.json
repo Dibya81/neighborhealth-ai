@@ -1,0 +1,31 @@
+{
+  "trained_at": "2026-04-24",
+  "n_samples": 9490,
+  "n_features": 9,
+  "feature_columns": [
+    "rainfall_7d",
+    "rainfall_lag14",
+    "temp_avg",
+    "humidity_avg",
+    "dengue_cases_30d",
+    "dengue_cases_prev_year",
+    "report_count_7d",
+    "month",
+    "population_density"
+  ],
+  "roc_auc": 0.8436,
+  "data_source": "karnataka_parliamentary_records_x26_density",
+  "model_version": "v2-no-leakage",
+  "feature_importances": {
+    "rainfall_7d": 0.07868419587612152,
+    "rainfall_lag14": 0.08479905873537064,
+    "temp_avg": 0.06970406323671341,
+    "humidity_avg": 0.06933154165744781,
+    "dengue_cases_30d": 0.23892532289028168,
+    "dengue_cases_prev_year": 0.1429104208946228,
+    "report_count_7d": 0.07513327896595001,
+    "month": 0.19651784002780914,
+    "population_density": 0.043994300067424774
+  },
+  "note": "Label uses 14-day future cases (no leakage). Ward density varied."
+}

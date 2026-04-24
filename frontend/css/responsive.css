@@ -1,0 +1,667 @@
+/* ============================================================
+   NeighborHealth — Responsive / Mobile Styles
+   Breakpoints:
+     iPad / tablet : ≤ 1024px
+     Small tablet  : ≤ 768px
+     Mobile        : ≤ 600px
+     Small mobile  : ≤ 400px
+   ============================================================ */
+
+/* ── Global: smooth scrolling & touch ── */
+html { -webkit-text-size-adjust: 100%; }
+* { -webkit-tap-highlight-color: transparent; }
+
+/* ── Touch targets — minimum 44×44 px on all touch devices ── */
+@media (hover: none) and (pointer: coarse) {
+  button, a, [role="button"], input, select, textarea {
+    min-height: 44px;
+  }
+  .btn-pill      { min-height: 36px; padding: 8px 14px; }
+  .search-item   { padding: 14px 16px; min-height: 44px; }
+  .fab           { min-height: 44px; min-width: 44px; }
+  .modal-close   { min-height: 44px; min-width: 44px; }
+  .type-btn      { min-height: 36px; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MAP PAGE (index.html)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── iPad / Tablet (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  .hud-topleft-container {
+    width: 280px;
+    top: 14px;
+    left: 14px;
+    gap: 8px;
+  }
+
+  .hud-bottomleft {
+    width: 280px;
+    bottom: 18px;
+    left: 14px;
+    padding: 12px 16px;
+  }
+
+  .hud-bottomright {
+    bottom: 18px;
+    right: 14px;
+    gap: 8px;
+  }
+
+  .hud-topright { top: 14px; right: 14px; }
+  .search-wrap  { width: 248px; height: 42px; }
+  .fab          { width: 44px; height: 44px; }
+
+  .hud-legend {
+    font-size: 11px;
+    padding: 6px 14px;
+    gap: 8px;
+  }
+
+  /* Disease pills: allow horizontal scroll on tablet */
+  .hud-top-center {
+    max-width: calc(100vw - 320px);
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .disease-pills-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    scrollbar-width: none;
+  }
+
+  /* Ward panel: narrower on tablet */
+  .ward-panel { width: 340px; }
+}
+
+/* ── Small Tablet (≤ 768px) ── */
+@media (max-width: 768px) {
+  .hud-topleft-container {
+    width: 260px;
+    top: 12px;
+    left: 12px;
+  }
+
+  .hud-bottomleft {
+    width: calc(100vw - 24px);
+    bottom: 80px;
+    left: 12px;
+    right: 12px;
+  }
+
+  .hud-bottomright {
+    bottom: 16px;
+    right: 12px;
+    flex-direction: row;
+    gap: 8px;
+    background: none;
+    border: none;
+    backdrop-filter: none;
+  }
+
+  .fab { width: 44px; height: 44px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+
+  /* Fab labels: appear above on tablet */
+  .fab-label {
+    right: auto;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    top: auto;
+    transform: translateX(-50%) translateY(8px);
+  }
+  .fab:hover .fab-label { transform: translateX(-50%) translateY(0); }
+
+  .hud-legend { display: none; }
+  .user-name-display { display: none; }
+
+  /* Ward panel: full width on small tablet */
+  .ward-panel {
+    width: 100%;
+    max-width: 400px;
+    right: 0;
+    border-radius: var(--r-xl) 0 0 var(--r-xl);
+  }
+
+  .hud-top-center {
+    top: 12px;
+    max-width: calc(100vw - 290px);
+  }
+
+  /* Modals */
+  .modal-card { max-width: 96vw; margin: 12px; }
+  .modal-body { padding: 16px; }
+  .modal { max-width: 96vw !important; margin: 12px !important; }
+}
+
+/* ── Mobile (≤ 600px) ── */
+@media (max-width: 600px) {
+
+  /* Top-left HUD: full-width strip at top */
+  .hud-topleft-container {
+    width: calc(100vw - 24px);
+    top: 10px;
+    left: 12px;
+    right: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Brand + search side by side */
+  .hud-brand-panel { padding: 10px 14px; flex: 1; min-width: 0; }
+  .hud-search-panel { flex: 1; min-width: 0; }
+  .search-wrap { width: 100%; }
+  .hud-meta-panel { display: none; }
+
+  /* Disease pills: full-width scrollable strip below brand */
+  .hud-top-center {
+    top: auto;
+    bottom: 140px;
+    left: 12px;
+    right: 12px;
+    transform: none;
+    max-width: none;
+    width: calc(100vw - 24px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    padding: 4px;
+    z-index: 101;
+  }
+
+  .disease-pills-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    scrollbar-width: none;
+    display: flex;
+    gap: 4px;
+    padding: 2px 4px;
+  }
+
+  /* Bottom left summary: sits above disease pills */
+  .hud-bottomleft {
+    width: calc(100vw - 24px);
+    bottom: 200px;
+    left: 12px;
+    right: 12px;
+    padding: 10px 14px;
+  }
+
+  /* FABs: row across bottom-right */
+  .hud-bottomright {
+    bottom: 16px;
+    right: 12px;
+    flex-direction: row;
+    gap: 8px;
+    background: none;
+    border: none;
+    backdrop-filter: none;
+  }
+
+  .fab { width: 44px; height: 44px; }
+
+  /* FAB labels: above on mobile */
+  .fab-label {
+    right: auto;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    top: auto;
+    transform: translateX(-50%) translateY(8px);
+    white-space: nowrap;
+    font-size: 10px;
+  }
+  .fab:hover .fab-label { transform: translateX(-50%) translateY(0); }
+
+  /* Sim panel and summary panel */
+  .sim-panel {
+    width: calc(100vw - 48px) !important;
+    max-width: 260px;
+    bottom: calc(100% + 8px) !important;
+    right: 0 !important;
+    left: auto !important;
+    top: auto !important;
+  }
+
+  /* Hide legend on mobile */
+  .hud-legend { display: none; }
+
+  /* Profile pill: icon only */
+  .user-name-display { display: none; }
+  .profile-pill { padding: 4px 8px; }
+  .hud-topright { top: 10px; right: 12px; }
+
+  /* Ward panel: full-screen bottom-sheet on mobile */
+  .ward-panel {
+    width: 100vw !important;
+    height: 85vh !important;
+    top: auto !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-left: none !important;
+    border-top: 1px solid var(--border) !important;
+    transform: translateY(100%) !important;
+    transition: transform var(--dur-med) var(--ease-out) !important;
+  }
+  .ward-panel.open { transform: translateY(0) !important; }
+
+  /* Drag handle for bottom sheet */
+  .ward-panel::before {
+    content: '';
+    display: block;
+    width: 36px; height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.15);
+    margin: 12px auto 0;
+  }
+
+  /* Panel close button: bigger tap target */
+  .panel-close { width: 44px !important; height: 44px !important; top: 12px !important; right: 12px !important; }
+  .panel-inner  { padding: 8px 16px 32px !important; }
+
+  /* Alert banner */
+  #alert-banner { font-size: 12px; padding: 8px 40px 8px 12px; }
+
+  /* Modals */
+  .modal-card { max-width: 100vw; margin: 0; border-radius: 20px 20px 0 0; }
+  .modal { 
+    max-width: 100vw !important; 
+    width: 100% !important; 
+    border-radius: 20px 20px 0 0 !important;
+    margin: 0 !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+  .modal-overlay { align-items: flex-end !important; }
+  .modal-body { padding: 16px; }
+
+  .modal-overlay.fullscreen .modal-fullscreen,
+  .modal-fullscreen {
+    padding: 16px !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-header-large { padding: 0 0 16px !important; }
+  .modal-close {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 22px !important;
+    top: 12px !important;
+    right: 12px !important;
+  }
+
+  /* Pipeline scrolls horizontally */
+  #ml-pipeline {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Chat panel: full-screen */
+  .chat-panel,
+  [id*="chat-panel"] {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    z-index: 9000 !important;
+  }
+
+  /* AI Assistant pill + chat */
+  #ai-assistant {
+    bottom: 180px;
+    left: 12px;
+    right: auto;
+  }
+  #ai-chat {
+    width: calc(100vw - 24px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: calc(100% + 8px) !important;
+    max-height: 60vh !important;
+  }
+
+  /* Report sheet */
+  .bottom-sheet { border-radius: 20px 20px 0 0; }
+
+  /* Toast */
+  #toast {
+    bottom: 16px;
+    left: 12px;
+    right: 12px;
+    transform: none;
+    text-align: center;
+    white-space: normal;
+  }
+}
+
+/* ── Small Mobile (≤ 400px) ── */
+@media (max-width: 400px) {
+  .hud-topleft-container {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    width: calc(100vw - 16px);
+  }
+
+  .fab { width: 40px; height: 40px; font-size: 14px !important; }
+
+  .hud-bottomright {
+    right: 8px;
+    gap: 6px;
+  }
+
+  .hud-bottomleft {
+    left: 8px;
+    right: 8px;
+    width: calc(100vw - 16px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DASHBOARD / LANDING PAGE (Dashboard.html)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Hamburger menu button — hidden on desktop, shown on mobile */
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  color: var(--text, #f0eff8);
+  transition: background 0.2s;
+}
+.nav-hamburger:hover { background: rgba(255,255,255,0.06); }
+.nav-hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  margin: 4px 0;
+  transition: all 0.3s ease;
+}
+
+/* Mobile nav drawer */
+.nav-mobile-drawer {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  background: rgba(4, 4, 10, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  z-index: 999;
+  padding: 72px 24px 24px;
+  flex-direction: column;
+  gap: 4px;
+  transform: translateY(-100%);
+  transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+}
+.nav-mobile-drawer.open { transform: translateY(0); }
+.nav-mobile-drawer a {
+  display: block;
+  padding: 14px 16px;
+  font-size: 16px;
+  color: rgba(255,255,255,0.7);
+  border-radius: 10px;
+  transition: background 0.2s, color 0.2s;
+}
+.nav-mobile-drawer a:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.nav-mobile-drawer .nav-cta-mobile {
+  display: block;
+  margin-top: 12px;
+  padding: 14px 24px;
+  background: #1db97a;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  /* Show hamburger, hide desktop links */
+  .nav-hamburger { display: flex; flex-direction: column; }
+  .nav-links { display: none !important; }
+  .nav-cta { display: none; }
+
+  /* Nav padding */
+  nav { padding: 14px 20px !important; }
+
+  /* Grid collapses */
+  .problem-grid { grid-template-columns: 1fr; }
+  .solution-split { grid-template-columns: 1fr; gap: 32px; }
+  .pipeline { grid-template-columns: repeat(3, 1fr); }
+  .pipeline::before { display: none; }
+  .features-grid { grid-template-columns: 1fr 1fr; }
+  .live-layout { grid-template-columns: 1fr; }
+  .ai-layout { grid-template-columns: 1fr; }
+  .tech-grid { grid-template-columns: 1fr 1fr; }
+  .future-grid { grid-template-columns: 1fr; }
+
+  footer { 
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+    padding: 24px 20px;
+  }
+
+  /* Live map height */
+  #live-map { height: 320px; }
+
+  section { padding: 72px 20px; }
+
+  .problem-canvas-wrap { height: 55vh; margin-top: 40px; }
+}
+
+@media (max-width: 600px) {
+  nav { padding: 12px 16px !important; }
+
+  .features-grid { grid-template-columns: 1fr; }
+  .tech-grid { grid-template-columns: 1fr 1fr; }
+
+  .hero-title { font-size: clamp(32px, 9vw, 44px) !important; }
+  .hero-sub   { font-size: 15px !important; }
+  .hero-actions { flex-direction: column; align-items: stretch; }
+  .btn-hero { justify-content: center; }
+
+  section { padding: 56px 16px; }
+
+  #live-map { height: 260px; }
+
+  .solution-split { gap: 20px; }
+
+  .pipeline { grid-template-columns: 1fr 1fr; }
+  .pipe-icon { width: 64px; height: 64px; font-size: 22px; }
+
+  .problem-canvas-wrap { height: 45vh; }
+
+  #cta { padding: 72px 16px; }
+  .cta-title { font-size: clamp(28px, 7vw, 40px) !important; }
+  .cta-sub { font-size: 15px !important; }
+  .cta-actions { flex-direction: column; align-items: stretch; }
+  .btn-launch, .btn-launch-secondary { justify-content: center; }
+
+  footer { padding: 24px 16px; }
+  .footer-links { flex-direction: column; gap: 12px; align-items: center; }
+
+  .hero-badge { font-size: 10px; }
+}
+
+@media (max-width: 400px) {
+  .pipeline { grid-template-columns: 1fr; }
+  .tech-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LOGIN PAGE (login.html)
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  .login-wrapper { padding: 16px; align-items: flex-end; }
+
+  .login-card {
+    max-width: 100% !important;
+    width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    padding: 32px 20px 24px !important;
+    margin: 0 !important;
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+
+  /* Hide click-hint on mobile */
+  .click-hint { display: none; }
+
+  /* Loader overlay corners */
+  .nh-corner-tl,
+  .nh-corner-br { display: none; }
+}
+
+@media (max-width: 400px) {
+  .login-card { padding: 24px 16px 20px !important; }
+  .brand-title { font-size: 20px !important; }
+  .btn-primary { font-size: 14px !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ML INTELLIGENCE PAGE (ml.html) — already has built-in
+   breakpoints; these supplement edge cases
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  /* Data table: horizontal scroll */
+  #sec-table { overflow-x: hidden; }
+  #sec-table > div { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Feature name: even shorter */
+  .ml-feature-name { min-width: 90px !important; font-size: 11px !important; }
+
+  /* Model cards: 2-col */
+  #ml-model-cards { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+  .ml-card { padding: 16px 10px !important; }
+  .ml-card-val { font-size: 18px !important; }
+
+  /* Top bar */
+  .top-bar { flex-wrap: wrap; gap: 8px; }
+  .back-btn { font-size: 12px; padding: 8px 14px; }
+
+  /* Hero */
+  .hero h1 { font-size: 22px !important; }
+  .hero .subtitle { font-size: 12px !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HEALTH CHECK PAGE (health-check/index.html)
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Prevent blobs from causing overflow */
+  .blob { width: 300px !important; height: 300px !important; }
+
+  /* Back button: shrink + move to avoid covering title */
+  .back-btn {
+    top: 1rem !important;
+    left: 1rem !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Header padding */
+  header { padding: 5rem 0 1.5rem !important; }
+  h1 { font-size: 2.2rem !important; }
+
+  /* Switcher: full width buttons */
+  .switcher {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .mode-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 0.7rem 1rem !important;
+    font-size: 0.9rem;
+  }
+
+  /* Card padding */
+  .card { padding: 1.5rem !important; border-radius: 16px !important; }
+
+  /* Upload area */
+  .upload-area { padding: 2rem 1rem !important; }
+
+  /* Detail grid: 1 col */
+  .detail-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+
+  .container { padding: 1rem !important; }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.8rem !important; }
+
+  .back-btn {
+    position: static !important;
+    display: inline-block;
+    margin: 1rem 0 0 1rem;
+  }
+
+  header { padding: 1rem 0 1rem !important; }
+
+  .mode-btn { font-size: 0.85rem; padding: 0.6rem 0.8rem !important; }
+
+  .status-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+
+  /* Prevent blobs from overflowing */
+  .blob { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL OVERLAY GLOBAL FIXES
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  /* All modals become bottom sheets */
+  .modal-overlay:not(.fullscreen) {
+    align-items: flex-end;
+  }
+
+  /* Travel and Summary modals */
+  #travel-modal-overlay .modal,
+  #summary-modal-overlay .modal {
+    border-radius: 20px 20px 0 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  /* Travel result grid: 1 col */
+  #travel-result > div[style*="grid-template-columns"] {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBAL SMOOTH SCROLLING FOR TOUCH
+   ═══════════════════════════════════════════════════════════ */
+
+.overflow-scroll-touch {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}

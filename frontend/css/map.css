@@ -1,0 +1,47 @@
+/* Leaflet overrides for dark map */
+.leaflet-container { background: #0a0a0c; }
+.leaflet-tile-pane { filter: brightness(0.85) saturate(0.8); }
+.leaflet-control-zoom, .leaflet-control-attribution { display: none !important; }
+
+/* Ward tooltip */
+.ward-tooltip {
+  background: var(--surface-solid) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-sm) !important;
+  color: var(--text-primary) !important;
+  font-size: 12px !important;
+  font-family: inherit !important;
+  padding: 6px 10px !important;
+  box-shadow: var(--shadow) !important;
+  white-space: nowrap;
+}
+.ward-tooltip::before { display: none !important; }
+.tooltip-score { font-weight: 600; margin-left: 4px; }
+.tooltip-score.high   { color: var(--risk-high); }
+.tooltip-score.medium { color: var(--risk-medium); }
+.tooltip-score.low    { color: var(--risk-low); }
+
+/* Report pin marker */
+.report-pin-marker {
+  background: var(--risk-high);
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.8);
+  box-shadow: 0 0 0 4px rgba(201,75,44,0.25);
+  animation: pin-pulse 1.5s ease-in-out infinite;
+}
+@keyframes pin-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(201,75,44,0.25); }
+  50%       { box-shadow: 0 0 0 8px rgba(201,75,44,0.10); }
+}
+
+/* Confirmed report marker (ripple) */
+.confirmed-pin {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--risk-medium);
+  border: 2px solid rgba(255,255,255,0.6);
+  animation: report-ripple 0.8s ease-out 3;
+}
+@keyframes report-ripple {
+  0%   { box-shadow: 0 0 0 0 rgba(196,135,10,0.6); }
+  100% { box-shadow: 0 0 0 16px rgba(196,135,10,0); }
+}

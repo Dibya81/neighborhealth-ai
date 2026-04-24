@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Check | Personal Analysis</title>
+    <!-- Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0c10;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --primary-neon: #4f46e5;
+            --secondary-neon: #06b6d4;
+            --accent-pink: #ec4899;
+            --safe-green: #10b981;
+            --warning-amber: #f59e0b;
+            --alert-red: #ef4444;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Abstract Background Elements */
+        .blob {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--primary-neon) 0%, transparent 70%);
+            filter: blur(80px);
+            opacity: 0.15;
+            z-index: -1;
+            animation: move 20s infinite alternate;
+        }
+
+        .blob-2 {
+            bottom: -100px;
+            right: -100px;
+            background: radial-gradient(circle, var(--accent-pink) 0%, transparent 70%);
+        }
+
+        @keyframes move {
+            from { transform: translate(-10%, -10%); }
+            to { transform: translate(10%, 10%); }
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 4rem 0 2rem;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, var(--secondary-neon));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Mode Switcher */
+        .switcher {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .mode-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+        }
+
+        .mode-btn.active {
+            background: var(--primary-neon);
+            border-color: var(--primary-neon);
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.4);
+        }
+
+        /* Glass Cards */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Upload UI */
+        .upload-area {
+            border: 2px dashed var(--glass-border);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--secondary-neon);
+        }
+
+        .input-hidden {
+            display: none;
+        }
+
+        .preview-container {
+            margin-top: 2rem;
+            display: none;
+        }
+
+        #img-preview {
+            max-width: 100%;
+            border-radius: 12px;
+            max-height: 300px;
+        }
+
+        #audio-preview {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-analyze {
+            width: 100%;
+            margin-top: 2rem;
+            padding: 1.2rem;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(45deg, var(--primary-neon), var(--secondary-neon));
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .btn-analyze:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Results Panel */
+        #results-container {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1.2rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .severity-high { background: rgba(239, 68, 68, 0.2); color: var(--alert-red); border: 1px solid var(--alert-red); }
+        .severity-moderate { background: rgba(245, 158, 11, 0.2); color: var(--warning-amber); border: 1px solid var(--warning-amber); }
+        .severity-low { background: rgba(16, 185, 129, 0.2); color: var(--safe-green); border: 1px solid var(--safe-green); }
+        .severity-uncertain { background: rgba(156, 163, 175, 0.2); color: var(--text-muted); border: 1px solid var(--text-muted); }
+
+        /* Confidence Bar */
+        .confidence-section {
+            margin-bottom: 2rem;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .progress-bg {
+            background: rgba(255, 255, 255, 0.05);
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary-neon), var(--secondary-neon));
+            width: 0%;
+            transition: width 1s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            box-shadow: 0 0 10px var(--secondary-neon);
+        }
+
+        /* Detail Sections */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .detail-grid { grid-template-columns: 1fr; }
+        }
+
+        .detail-box {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            border-radius: 16px;
+        }
+
+        .detail-title {
+            color: var(--secondary-neon);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .detail-list {
+            list-style: none;
+        }
+
+        .detail-list li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.8rem;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .detail-list li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--primary-neon);
+        }
+
+
+        /* Loading Spinner */
+        #loader {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--glass-border);
+            border-top: 4px solid var(--secondary-neon);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .disclaimer {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 2rem;
+            line-height: 1.6;
+        }
+
+        /* Recording UI */
+        .btn-record {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            margin: 1rem auto 0;
+            font-weight: 600;
+        }
+
+        .btn-record.recording {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--alert-red);
+            color: var(--alert-red);
+        }
+
+        .pulse-red {
+            width: 10px;
+            height: 10px;
+            background: var(--alert-red);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--alert-red);
+        }
+
+        .recording .pulse-red {
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(.8); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+            100% { transform: scale(.8); opacity: 1; }
+        }
+        
+        /* Back to Dashboard Button */
+        .back-btn {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        .back-btn:hover { background: var(--glass-border); }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .blob { width: 300px !important; height: 300px !important; }
+
+            .back-btn {
+                top: 1rem;
+                left: 1rem;
+                padding: 0.5rem 0.9rem;
+                font-size: 0.8rem;
+            }
+
+            header { padding: 5rem 0 1.5rem; }
+
+            h1 {
+                font-size: 2.2rem;
+                padding: 0 1rem;
+            }
+
+            .subtitle { font-size: 1rem; padding: 0 0.5rem; }
+
+            .switcher { gap: 0.5rem; flex-wrap: wrap; }
+            .mode-btn {
+                flex: 1;
+                min-width: 120px;
+                padding: 0.7rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+                border-radius: 16px;
+            }
+
+            .upload-area { padding: 2rem 1rem; }
+
+            .detail-grid { grid-template-columns: 1fr; gap: 1rem; }
+
+            .container { padding: 1rem; }
+        }
+
+        @media (max-width: 480px) {
+            /* Back btn: static so it doesn't overlap title on tiny screens */
+            .back-btn {
+                position: static;
+                display: inline-block;
+                margin: 1rem 0 0 1rem;
+                font-size: 0.8rem;
+            }
+
+            header { padding: 1rem 0 1rem; }
+
+            h1 { font-size: 1.8rem; }
+
+            .subtitle { font-size: 0.9rem; }
+
+            .switcher { gap: 0.4rem; }
+            .mode-btn {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.82rem;
+                min-width: 100px;
+            }
+
+            .status-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            /* Hide large blobs on tiny screens to save paint */
+            .blob { display: none !important; }
+
+            .card { padding: 1.2rem; }
+
+            .btn-analyze { font-size: 0.95rem; padding: 1rem; }
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            /* Minimum 44px touch targets */
+            .mode-btn  { min-height: 44px; }
+            .btn-analyze { min-height: 48px; }
+            .back-btn  { min-height: 44px; display: inline-flex; align-items: center; }
+            .btn-record { min-height: 44px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="blob"></div>
+    <div class="blob-2 blob"></div>
+
+    <a href="/index.html" class="back-btn">← Back to Dashboard</a>
+
+    <div class="container">
+        <header>
+            <h1>AI Health Check</h1>
+            <p class="subtitle">Personalized physiological analysis powered by advanced AI.</p>
+        </header>
+
+        <div class="switcher">
+            <button class="mode-btn active" onclick="setMode('skin')">Check Skin</button>
+            <button class="mode-btn" onclick="setMode('cough')">Check Cough</button>
+        </div>
+
+        <!-- Guidelines -->
+        <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+            Upload a close-up image of the affected skin area.<br>
+            Avoid full-face or unrelated images.
+        </p>
+
+        <!-- Input Section -->
+        <div class="card" id="input-card">
+            <div id="drop-zone" class="upload-area" onclick="document.getElementById('file-input').click()">
+                <div id="upload-prompt">
+                    <p style="font-size: 1.5rem; margin-bottom: 0.5rem;" id="upload-icon">📷</p>
+                    <p id="label-text">Select or drag skin image</p>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;" id="format-text">PNG, JPG up to 10MB</p>
+                </div>
+                <div class="preview-container" id="preview-container">
+                    <img id="img-preview" src="#" alt="Preview">
+                    <audio id="audio-preview" controls></audio>
+                </div>
+            </div>
+            
+            <button id="record-btn" class="btn-record" onclick="toggleRecording()">
+                <span class="pulse-red"></span>
+                <span id="record-text">Start Recording</span>
+            </button>
+
+            <input type="file" id="file-input" class="input-hidden" onchange="handleFile(this)">
+            <button id="analyze-btn" class="btn-analyze" disabled onclick="runAnalysis()">Run Intelligence Scan</button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loader">
+            <div class="spinner"></div>
+            <p>Processing via Neural Engine...</p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-container">
+            <div class="card">
+                <div class="status-header">
+                    <h2 id="result-status-text">Analysis Result</h2>
+                    <span id="severity-badge" class="status-badge severity-moderate">Moderate</span>
+                </div>
+
+                <div class="confidence-section">
+                    <div class="bar-label">
+                        <span>Confidence Level</span>
+                        <span id="confidence-pct">78%</span>
+                    </div>
+                    <div class="progress-bg">
+                        <div class="progress-fill" id="confidence-fill"></div>
+                    </div>
+                </div>
+
+                <p id="analysis-message" style="margin-bottom: 2rem; font-size: 1.1rem; line-height: 1.6;"></p>
+
+                <div class="detail-grid">
+                    <div class="detail-box">
+                        <h3 class="detail-title">🔍 Why this result?</h3>
+                        <ul class="detail-list" id="why-list"></ul>
+                    </div>
+                    <div class="detail-box">
+                        <h3 class="detail-title">📋 Action Plan</h3>
+                        <ul class="detail-list" id="precautions-list"></ul>
+                    </div>
+                </div>
+
+            </div>
+            <p class="disclaimer" id="disclaimer-text"></p>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'skin';
+        let selectedFile = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // Unified API Base
+        const API_BASE = window.location.origin.replace(':3000', ':8000') + "/api/health";
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            resetFile();
+            
+            const labelText = document.getElementById('label-text');
+            const icon = document.getElementById('upload-icon');
+            const formatText = document.getElementById('format-text');
+
+            if(mode === 'skin') {
+                labelText.innerText = 'Select or drag skin image';
+                icon.innerText = '📷';
+                formatText.innerText = 'PNG, JPG up to 10MB';
+                document.getElementById('record-btn').style.display = 'none';
+            } else {
+                labelText.innerText = 'Record or upload cough audio';
+                icon.innerText = '🎙️';
+                formatText.innerText = 'WAV, MP3, AAC up to 10MB';
+                document.getElementById('record-btn').style.display = 'flex';
+            }
+        }
+
+        function resetFile() {
+            selectedFile = null;
+            document.getElementById('file-input').value = '';
+            document.getElementById('preview-container').style.display = 'none';
+            document.getElementById('upload-prompt').style.display = 'block';
+            document.getElementById('analyze-btn').disabled = true;
+            document.getElementById('results-container').style.display = 'none';
+            resetRecording();
+        }
+
+        function resetRecording() {
+            if (isRecording && mediaRecorder) {
+                mediaRecorder.stop();
+                isRecording = false;
+            }
+            audioChunks = [];
+            const recordBtn = document.getElementById('record-btn');
+            if (recordBtn) {
+                recordBtn.classList.remove('recording');
+                document.getElementById('record-text').innerText = 'Start Recording';
+            }
+        }
+
+        function handleFile(input) {
+            if (input.files && input.files[0]) {
+                selectedFile = input.files[0];
+                document.getElementById('analyze-btn').disabled = false;
+                document.getElementById('upload-prompt').style.display = 'none';
+                document.getElementById('preview-container').style.display = 'block';
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgPreview = document.getElementById('img-preview');
+                    const audioPreview = document.getElementById('audio-preview');
+
+                    if(currentMode === 'skin') {
+                        imgPreview.src = e.target.result;
+                        imgPreview.style.display = 'block';
+                        audioPreview.style.display = 'none';
+                    } else {
+                        audioPreview.src = e.target.result;
+                        audioPreview.style.display = 'block';
+                        imgPreview.style.display = 'none';
+                    }
+                }
+                reader.readAsDataURL(selectedFile);
+            }
+        }
+
+        async function toggleRecording() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Browser error: Media devices not supported.');
+                return;
+            }
+
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (event) => audioChunks.push(event.data);
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        selectedFile = new File([audioBlob], `recorded_cough_${Date.now()}.wav`, { type: 'audio/wav' });
+                        
+                        document.getElementById('audio-preview').src = URL.createObjectURL(audioBlob);
+                        document.getElementById('audio-preview').style.display = 'block';
+                        document.getElementById('img-preview').style.display = 'none';
+                        document.getElementById('preview-container').style.display = 'block';
+                        document.getElementById('upload-prompt').style.display = 'none';
+                        document.getElementById('analyze-btn').disabled = false;
+                        
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    document.getElementById('record-btn').classList.add('recording');
+                    document.getElementById('record-text').innerText = 'Stop Recording';
+                } catch (err) {
+                    alert('Microphone access denied: ' + err.message);
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                document.getElementById('record-btn').classList.remove('recording');
+                document.getElementById('record-text').innerText = 'Start Recording';
+            }
+        }
+
+        async function runAnalysis() {
+            const loader = document.getElementById('loader');
+            const results = document.getElementById('results-container');
+            const inputCard = document.getElementById('input-card');
+
+            inputCard.style.opacity = '0.5';
+            loader.style.display = 'block';
+            results.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch(`${API_BASE}/${currentMode}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error('Analysis engine failed. Ensure models are loaded.');
+                
+                const data = await response.json();
+                displayResults(data);
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                loader.style.display = 'none';
+                inputCard.style.opacity = '1';
+            }
+        }
+
+        function displayResults(data) {
+            document.getElementById('results-container').style.display = 'block';
+            document.getElementById('result-status-text').innerText = data.status;
+            document.getElementById('analysis-message').innerText = data.message;
+            document.getElementById('disclaimer-text').innerText = data.disclaimer;
+
+            const badge = document.getElementById('severity-badge');
+            badge.innerText = data.severity;
+            badge.className = `status-badge severity-${data.status === "uncertain" ? "uncertain" : data.severity}`;
+
+            const pct = Math.round(data.confidence * 100);
+            document.getElementById('confidence-pct').innerText = `${pct}%`;
+            document.getElementById('confidence-fill').style.width = `${pct}%`;
+
+            const whyList = document.getElementById('why-list');
+            whyList.innerHTML = '';
+            data.why.forEach(item => { const li = document.createElement('li'); li.innerText = item; whyList.appendChild(li); });
+
+            const precautionsList = document.getElementById('precautions-list');
+            precautionsList.innerHTML = '';
+            data.precautions.forEach(item => { const li = document.createElement('li'); li.innerText = item; precautionsList.appendChild(li); });
+
+            document.getElementById('results-container').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+/* ── Toast ──────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 100px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 600; padding: 10px 18px;
+  background: var(--surface-solid); border: 1px solid var(--border);
+  border-radius: var(--r-pill); font-size: 13px; color: var(--text-primary);
+  box-shadow: var(--shadow); opacity: 0;
+  transition: opacity var(--dur-med), transform var(--dur-med) var(--ease-out);
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Shared animations ──────────────────────────── */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Ward hover flash */
+.ward-flash { animation: ward-flash 0.4s ease-out; }
+@keyframes ward-flash {
+  0%   { filter: brightness(1.6); }
+  100% { filter: brightness(1); }
+}
+
+/* Signal tile reveal */
+.signal-tile { animation: fade-in 0.3s ease both; }
+.signal-tile:nth-child(1) { animation-delay: 0.05s; }
+.signal-tile:nth-child(2) { animation-delay: 0.10s; }
+.signal-tile:nth-child(3) { animation-delay: 0.15s; }
+
+/* Check path draw */
+.check-path {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: draw-check 0.4s 0.3s ease forwards;
+}
+@keyframes draw-check { to { stroke-dashoffset: 0; } }
+
+/* Panel content fade when ward changes */
+.panel-inner.refreshing { opacity: 0.4; transition: opacity 0.15s; }

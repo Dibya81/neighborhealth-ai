@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>ML Intelligence · NeighborHealth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:         #f0eeff;
+      --text:       #f0eff8;           /* white — for inside dark cards */
+      --muted:      rgba(240,239,248,0.50);
+      --border:     rgba(255,255,255,0.10);
+      --card:       rgba(10,8,30,0.82); /* dark glass card */
+      --card-hover: rgba(20,16,50,0.92);
+      --teal:  #1db97a;
+      --blue:  #2d8ef0;
+      --purple:#a825f5;
+    }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html, body {
+      width:100%; height:100%;
+      font-family:'Inter',sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── full-page mount for Three.js renderer ── */
+    #bg-mount {
+      position: fixed; inset: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none; z-index: 0;
+      overflow: hidden;
+    }
+    /* Three.js appends its own canvas here */
+    #bg-mount canvas {
+      position: absolute; inset: 0;
+      width: 100% !important; height: 100% !important;
+      display: block;
+    }
+
+    /* ── page scrolls above the WebGL canvas ── */
+    #page {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      padding: 40px clamp(20px,5vw,80px) 80px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* ── top bar ── */
+    .top-bar { display:flex; align-items:center; gap:16px; margin-bottom:48px; }
+    .back-btn {
+      color: #1a0f40 !important; background: rgba(26,15,64,0.07) !important; border-color: rgba(26,15,64,0.18) !important;
+      display:flex; align-items:center; gap:8px;
+      padding:10px 20px;
+      background:rgba(26,15,64,0.07);
+      border:1px solid var(--border); border-radius:50px;
+      color:var(--text); font-size:13px; font-weight:500;
+      cursor:pointer; text-decoration:none;
+      transition:background .2s, transform .15s;
+    }
+    .back-btn:hover { background:rgba(26,15,64,0.12); transform:translateX(-2px); }
+    .back-btn svg { width:14px; height:14px; }
+    .page-badge {
+      padding:6px 14px;
+      background:rgba(29,185,122,0.12); border:1px solid rgba(29,185,122,0.25);
+      border-radius:50px; font-size:11px; font-weight:600;
+      color:var(--teal); letter-spacing:.1em; text-transform:uppercase;
+    }
+
+    /* ── hero ── */
+    .hero { text-align:center; margin-bottom:56px; }
+    .hero-icon {
+      width:72px; height:72px; margin:0 auto 24px; border-radius:22px;
+      background:linear-gradient(135deg,rgba(29,185,122,.20),rgba(82,39,255,.20));
+      display:flex; align-items:center; justify-content:center;
+      font-size:36px; box-shadow:0 0 40px rgba(82,39,255,.15);
+    }
+    .hero h1 {
+      font-size:clamp(28px,4vw,44px); font-weight:800;
+      letter-spacing:-0.03em; margin-bottom:12px; color:var(--text);
+    }
+    .hero .subtitle {
+      color: rgba(26,15,64,0.60) !important; font-size:14px; color:var(--muted); letter-spacing:.05em; }
+
+    /* ── sections ── */
+    .section {
+      background:var(--card); border:1px solid var(--border);
+      border-radius:20px; padding:32px; margin-bottom:28px;
+      backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+      box-shadow:0 4px 24px rgba(82,39,255,0.06);
+      opacity:0; transform:translateY(20px);
+      transition:opacity .55s ease, transform .55s ease;
+    }
+    .section.reveal { opacity:1; transform:none; }
+    .section-label {
+      font-size:11px; font-weight:600; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.15em; margin-bottom:24px;
+    }
+
+    /* ── model cards ── */
+    #ml-model-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:24px; }
+    .ml-card {
+      background:rgba(255,255,255,0.65); border:1px solid var(--border);
+      border-radius:16px; padding:28px 20px; text-align:center;
+      transition:transform .3s, background .3s; cursor:default;
+    }
+    .ml-card:hover { transform:translateY(-4px); background:rgba(255,255,255,0.85); }
+    .ml-card-icon { font-size:28px; margin-bottom:12px; }
+    .ml-card-val  { font-size:26px; font-weight:700; color:var(--text); }
+    .ml-card-lab  { font-size:11px; color:var(--muted); text-transform:uppercase;
+                    letter-spacing:.1em; margin-top:6px; }
+
+    /* ── electric border ── */
+    .ml-electric-wrap { position:relative; overflow:visible; isolation:isolate; }
+    .ml-electric-wrap .eb-canvas {
+      position:absolute; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      pointer-events:none; z-index:2; display:block;
+    }
+
+    /* ── two-col ── */
+    .two-col { display:flex; flex-wrap:wrap; gap:28px; margin-bottom:28px; }
+    .two-col > .section { flex:1 1 380px; margin-bottom:0; }
+
+    /* ── feature importance ── */
+    .ml-feature-row { display:flex; align-items:center; gap:20px; margin-bottom:14px; }
+    .ml-feature-name { font-size:14px; color:var(--text); font-weight:500;
+                       min-width:180px; letter-spacing:-0.01em; }
+    .ml-feature-bar-bg { flex:1; height:10px; background:rgba(26,15,64,0.07);
+                         border-radius:5px; overflow:hidden; }
+    .ml-feature-bar-val { height:100%; border-radius:5px;
+                          transition:width 1.2s cubic-bezier(.34,1.56,.64,1); }
+    .ml-feature-pct { font-size:11px; color:var(--muted); min-width:50px;
+                      text-align:right; font-weight:600; font-family:monospace; }
+
+    /* ── pipeline ── */
+    #ml-pipeline { display:flex; align-items:center; overflow-x:auto;
+                   padding:20px 0; gap:0; scroll-behavior:smooth; }
+    .ml-pipeline-step { display:flex; align-items:center; }
+    .ml-step-box {
+      text-align:center; padding:20px 16px;
+      background:rgba(255,255,255,0.65); border:1px solid var(--border);
+      border-radius:14px; min-width:140px; transition:transform .3s;
+    }
+    .ml-step-box:hover { transform:translateY(-3px); }
+    .ml-step-icon  { font-size:28px; margin-bottom:10px; }
+    .ml-step-name  { font-size:14px; font-weight:600; color:var(--text); margin-bottom:6px; }
+    .ml-step-desc  { font-size:11px; color:var(--muted); line-height:1.5; max-width:160px; margin:0 auto; }
+    .ml-step-arrow { padding:0 20px; color:rgba(26,15,64,0.20); font-size:22px; }
+
+    /* ── data table ── */
+    #ml-data-table { width:100%; border-collapse:collapse; font-size:12px; }
+    #ml-data-table th {
+      padding:8px 12px; text-align:left; font-size:11px;
+      color:var(--muted); font-weight:600;
+      border-bottom:1px solid var(--border); white-space:nowrap;
+      background:rgba(26,15,64,0.04);
+    }
+    #ml-data-table td {
+      padding:7px 12px; border-bottom:1px solid var(--border);
+      color:var(--text); background:transparent;
+    }
+    #ml-data-table tr:hover td { background:rgba(82,39,255,0.04); }
+
+    /* ── live inference ── */
+    #ml-live-prediction { min-height:220px; }
+
+    /* ── footer ── */
+    .page-footer {
+      text-align:center; padding:60px 0 0;
+      color:var(--muted); font-size:13px;
+      border-top:1px solid var(--border); margin-top:40px;
+    }
+
+    /* ── responsive ── */
+    @media (max-width:900px) {
+      #page { padding:24px clamp(16px,4vw,48px) 60px; }
+      .hero h1 { font-size:32px; }
+      .two-col > .section { flex:1 1 100%; }
+    }
+    @media (max-width:600px) {
+      #page { padding:16px 14px 60px; }
+      .top-bar { margin-bottom:24px; gap:10px; flex-wrap:wrap; }
+      .hero { margin-bottom:32px; }
+      .hero-icon { width:56px; height:56px; font-size:26px; }
+      .hero h1 { font-size:24px; }
+      .section { padding:20px 16px; border-radius:16px; margin-bottom:16px; }
+      #ml-model-cards { grid-template-columns:repeat(2,1fr); gap:12px; }
+      .ml-card { padding:20px 12px; }
+      .ml-card-val { font-size:20px; }
+      .ml-feature-name { min-width:110px; font-size:12px; }
+      #ml-pipeline { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      .ml-step-box  { min-width:110px; padding:14px 10px; }
+      .two-col { flex-direction:column; gap:16px; }
+      .page-footer { font-size:11px; padding:40px 0 0; }
+    }
+    @media (hover:none) and (pointer:coarse) {
+      button, a, [role="button"] { min-height:44px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Three.js mount — renderer canvas appended here -->
+<div id="bg-mount"></div>
+
+<div id="page">
+
+  <div class="top-bar">
+    <a class="back-btn" href="index.html">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d="M9 1L3 7l6 6"/>
+      </svg>
+      Back to Map
+    </a>
+    <span class="page-badge">🧠 ML Intelligence</span>
+  </div>
+
+  <div class="hero">
+    <div class="hero-icon">🧠</div>
+    <h1>ML Model Demonstration</h1>
+    <p class="subtitle" id="ml-model-subtitle">Fetching XGBoost hybrid pipeline metadata...</p>
+  </div>
+
+  <div class="section" id="sec-cards">
+    <div class="section-label">Model Overview</div>
+    <div id="ml-model-cards"></div>
+  </div>
+
+  <div class="two-col">
+    <div class="section" id="sec-features">
+      <div class="section-label">Signal Weights</div>
+      <div id="ml-features"></div>
+    </div>
+    <div class="section" id="sec-live">
+      <div class="section-label">Live Inference Window</div>
+      <div id="ml-live-prediction"></div>
+    </div>
+  </div>
+
+  <div class="section" id="sec-pipeline">
+    <div class="section-label">Inference Pipeline Architecture</div>
+    <div id="ml-pipeline"></div>
+  </div>
+
+  <div class="section" id="sec-table">
+    <div class="section-label">Training Corpus Sample · Karnataka Health Division</div>
+    <div style="overflow-x:auto; margin-top:8px;">
+      <table id="ml-data-table"></table>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    NeighborHealth v1.0 · Integrated Disease Surveillance Program (IDSP) Hybrid Model
+  </div>
+
+</div>
+
+<!-- Three.js CDN — jsdelivr (faster), falls back to unpkg -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.min.js"></script>
+<script>
+  if (!window.THREE) {
+    var _s = document.createElement('script');
+    _s.src = 'https://unpkg.com/three@0.170.0/build/three.min.js';
+    document.head.appendChild(_s);
+  }
+</script>
+<script>
+/* ══════════════════════════════════════════════════════════════
+   1. LIQUIDETHER — Navier-Stokes WebGL fluid (Three.js)
+      Colors: ['#5227FF','#FF9FFC','#B19EEF'] on light bg
+      ALL objects pre-created at init — nothing created in loop
+   ══════════════════════════════════════════════════════════════ */
+(function() {
+  if (!window.THREE) { console.warn('Three.js failed to load'); return; }
+  var T = window.THREE;
+
+  /* ── config ── */
+  var COLORS      = ['#5227FF', '#FF9FFC', '#B19EEF'];
+  var BG_COLOR    = new T.Vector4(0.941, 0.933, 1.0, 1.0); /* #f0eeff light bg */
+  var MOUSE_FORCE = 25;
+  var CURSOR_SIZE = 100;
+  var RESOLUTION  = 0.5;
+  var DT          = 0.014;
+  var USE_BFECC   = true;
+  var ITER_POISSON= 32;
+  var AUTO_SPEED  = 0.55;
+  var AUTO_DELAY  = 2000;  /* ms idle before auto starts */
+  var AUTO_RAMP   = 600;   /* ms ramp-up */
+  var AUTO_INT    = 2.2;
+
+  var mount = document.getElementById('bg-mount');
+  if (!mount) return;
+
+  /* ── palette texture ── */
+  function mkPalette(cols) {
+    var n = Math.max(2, cols.length);
+    var data = new Uint8Array(n * 4);
+    for (var i = 0; i < n; i++) {
+      var c = new T.Color(cols[Math.min(i, cols.length - 1)]);
+      data[i*4]=Math.round(c.r*255); data[i*4+1]=Math.round(c.g*255);
+      data[i*4+2]=Math.round(c.b*255); data[i*4+3]=255;
+    }
+    var tex = new T.DataTexture(data, n, 1, T.RGBAFormat);
+    tex.magFilter = tex.minFilter = T.LinearFilter;
+    tex.wrapS = tex.wrapT = T.ClampToEdgeWrapping;
+    tex.generateMipmaps = false; tex.needsUpdate = true;
+    return tex;
+  }
+
+  /* ── renderer setup ── */
+  var W = mount.clientWidth  || window.innerWidth;
+  var H = mount.clientHeight || window.innerHeight;
+  var renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.autoClear = false;
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  renderer.setSize(W, H);
+  mount.appendChild(renderer.domElement);
+
+  /* ── FBO factory ── */
+  var isMobile = /iPad|iPhone|iPod/i.test(navigator.userAgent);
+  function mkFBO(w, h) {
+    return new T.WebGLRenderTarget(w, h, {
+      type: isMobile ? T.HalfFloatType : T.FloatType,
+      depthBuffer: false, stencilBuffer: false,
+      minFilter: T.LinearFilter, magFilter: T.LinearFilter,
+      wrapS: T.ClampToEdgeWrapping, wrapT: T.ClampToEdgeWrapping
+    });
+  }
+
+  var fW = Math.max(1, Math.round(RESOLUTION * W));
+  var fH = Math.max(1, Math.round(RESOLUTION * H));
+  var cellScale = new T.Vector2(1/fW, 1/fH);
+  var fboSize   = new T.Vector2(fW, fH);
+
+  var vel_0   = mkFBO(fW, fH), vel_1   = mkFBO(fW, fH);
+  var prs_0   = mkFBO(fW, fH), prs_1   = mkFBO(fW, fH);
+  var divFBO  = mkFBO(fW, fH);
+
+  /* ── shaders ── */
+  var face_vert = [
+    'precision highp float;',
+    'attribute vec3 position; uniform vec2 px; uniform vec2 boundarySpace; varying vec2 uv;',
+    'void main(){',
+    '  vec3 pos = position;',
+    '  vec2 scale = 1.0 - boundarySpace * 2.0;',
+    '  pos.xy *= scale;',
+    '  uv = vec2(0.5) + pos.xy * 0.5;',
+    '  gl_Position = vec4(pos, 1.0);',
+    '}'
+  ].join('\n');
+
+  var line_vert = [
+    'precision highp float;',
+    'attribute vec3 position; uniform vec2 px; varying vec2 uv;',
+    'void main(){',
+    '  vec3 pos = position; uv = 0.5 + pos.xy * 0.5;',
+    '  vec2 n = sign(pos.xy);',
+    '  pos.xy = abs(pos.xy) - px * 1.0; pos.xy *= n;',
+    '  gl_Position = vec4(pos, 1.0);',
+    '}'
+  ].join('\n');
+
+  var mouse_vert = [
+    'precision highp float;',
+    'attribute vec3 position; attribute vec2 uv;',
+    'uniform vec2 center; uniform vec2 scale; uniform vec2 px; varying vec2 vUv;',
+    'void main(){',
+    '  vec2 pos = position.xy * scale * 2.0 * px + center;',
+    '  vUv = uv; gl_Position = vec4(pos, 0.0, 1.0);',
+    '}'
+  ].join('\n');
+
+  var adv_frag = [
+    'precision highp float;',
+    'uniform sampler2D velocity; uniform float dt; uniform bool isBFECC;',
+    'uniform vec2 fboSize; uniform vec2 px; varying vec2 uv;',
+    'void main(){',
+    '  vec2 ratio = max(fboSize.x, fboSize.y) / fboSize;',
+    '  if(!isBFECC){',
+    '    vec2 v = texture2D(velocity,uv).xy;',
+    '    gl_FragColor = vec4(texture2D(velocity, uv - v*dt*ratio).xy, 0.,0.);',
+    '    return;',
+    '  }',
+    '  vec2 v0 = texture2D(velocity,uv).xy;',
+    '  vec2 p1 = uv - v0*dt*ratio;',
+    '  vec2 v1 = texture2D(velocity,p1).xy;',
+    '  vec2 p2 = p1 + v1*dt*ratio;',
+    '  vec2 err = (p2 - uv) * 0.5;',
+    '  vec2 p3 = uv - err;',
+    '  vec2 v2 = texture2D(velocity,p3).xy;',
+    '  gl_FragColor = vec4(texture2D(velocity, p3 - v2*dt*ratio).xy, 0.,0.);',
+    '}'
+  ].join('\n');
+
+  var force_frag = [
+    'precision highp float;',
+    'uniform vec2 force; uniform vec2 center; uniform vec2 scale; uniform vec2 px; varying vec2 vUv;',
+    'void main(){',
+    '  vec2 c = (vUv - 0.5) * 2.0;',
+    '  float d = 1.0 - min(length(c), 1.0); d *= d;',
+    '  gl_FragColor = vec4(force * d, 0.0, 1.0);',
+    '}'
+  ].join('\n');
+
+  var div_frag = [
+    'precision highp float;',
+    'uniform sampler2D velocity; uniform float dt; uniform vec2 px; varying vec2 uv;',
+    'void main(){',
+    '  float x0 = texture2D(velocity, uv - vec2(px.x,0.)).x;',
+    '  float x1 = texture2D(velocity, uv + vec2(px.x,0.)).x;',
+    '  float y0 = texture2D(velocity, uv - vec2(0.,px.y)).y;',
+    '  float y1 = texture2D(velocity, uv + vec2(0.,px.y)).y;',
+    '  gl_FragColor = vec4((x1-x0+y1-y0)/(2.0*dt));',
+    '}'
+  ].join('\n');
+
+  var pois_frag = [
+    'precision highp float;',
+    'uniform sampler2D pressure; uniform sampler2D divergence;',
+    'uniform vec2 px; varying vec2 uv;',
+    'void main(){',
+    '  float p0 = texture2D(pressure, uv+vec2(px.x*2.,0.)).r;',
+    '  float p1 = texture2D(pressure, uv-vec2(px.x*2.,0.)).r;',
+    '  float p2 = texture2D(pressure, uv+vec2(0.,px.y*2.)).r;',
+    '  float p3 = texture2D(pressure, uv-vec2(0.,px.y*2.)).r;',
+    '  float div = texture2D(divergence, uv).r;',
+    '  gl_FragColor = vec4((p0+p1+p2+p3)/4.0 - div);',
+    '}'
+  ].join('\n');
+
+  var press_frag = [
+    'precision highp float;',
+    'uniform sampler2D pressure; uniform sampler2D velocity;',
+    'uniform vec2 px; uniform float dt; varying vec2 uv;',
+    'void main(){',
+    '  float p0 = texture2D(pressure, uv+vec2(px.x,0.)).r;',
+    '  float p1 = texture2D(pressure, uv-vec2(px.x,0.)).r;',
+    '  float p2 = texture2D(pressure, uv+vec2(0.,px.y)).r;',
+    '  float p3 = texture2D(pressure, uv-vec2(0.,px.y)).r;',
+    '  vec2 v = texture2D(velocity,uv).xy - vec2(p0-p1, p2-p3)*0.5*dt;',
+    '  gl_FragColor = vec4(v, 0.0, 1.0);',
+    '}'
+  ].join('\n');
+
+  var color_frag = [
+    'precision highp float;',
+    'uniform sampler2D velocity; uniform sampler2D palette;',
+    'uniform vec4 bgColor; varying vec2 uv;',
+    'void main(){',
+    '  vec2 vel = texture2D(velocity, uv).xy;',
+    '  float lenv = clamp(length(vel), 0.0, 1.0);',
+    '  vec3 c = texture2D(palette, vec2(lenv, 0.5)).rgb;',
+    '  vec3 rgb = mix(bgColor.rgb, c, lenv);',
+    '  float a = mix(bgColor.a, 1.0, lenv);',
+    '  gl_FragColor = vec4(rgb, a);',
+    '}'
+  ].join('\n');
+
+  /* ── helper: build a scene with one full-screen mesh ── */
+  var cam = new T.Camera();
+  function makeScene(mat) {
+    var sc = new T.Scene();
+    sc.add(new T.Mesh(new T.PlaneGeometry(2, 2), mat));
+    return sc;
+  }
+
+  /* ── PRE-CREATE all passes (ONCE, never inside loop) ── */
+
+  /* Advection pass */
+  var advUni = {
+    boundarySpace: { value: cellScale.clone() },
+    px:            { value: cellScale.clone() },
+    fboSize:       { value: fboSize.clone() },
+    velocity:      { value: vel_0.texture },
+    dt:            { value: DT },
+    isBFECC:       { value: USE_BFECC }
+  };
+  var advScene = makeScene(new T.RawShaderMaterial({
+    vertexShader: face_vert, fragmentShader: adv_frag, uniforms: advUni
+  }));
+  /* boundary condition lines */
+  var bndGeo = new T.BufferGeometry();
+  bndGeo.setAttribute('position', new T.BufferAttribute(
+    new Float32Array([-1,-1,0, -1,1,0, -1,1,0, 1,1,0, 1,1,0, 1,-1,0, 1,-1,0, -1,-1,0]), 3));
+  var bndLine = new T.LineSegments(bndGeo, new T.RawShaderMaterial({
+    vertexShader: line_vert, fragmentShader: adv_frag, uniforms: advUni
+  }));
+  bndLine.visible = false; /* isBounce = false */
+  advScene.add(bndLine);
+
+  /* External force pass */
+  var forceUni = {
+    px:     { value: cellScale.clone() },
+    force:  { value: new T.Vector2() },
+    center: { value: new T.Vector2() },
+    scale:  { value: new T.Vector2(CURSOR_SIZE, CURSOR_SIZE) }
+  };
+  var forceScene = new T.Scene();
+  forceScene.add(new T.Mesh(new T.PlaneGeometry(1, 1), new T.RawShaderMaterial({
+    vertexShader: mouse_vert, fragmentShader: force_frag,
+    blending: T.AdditiveBlending, depthWrite: false, uniforms: forceUni
+  })));
+
+  /* Divergence pass */
+  var divUni = {
+    boundarySpace: { value: cellScale.clone() },
+    velocity:      { value: vel_1.texture },
+    px:            { value: cellScale.clone() },
+    dt:            { value: DT }
+  };
+  var divScene = makeScene(new T.RawShaderMaterial({
+    vertexShader: face_vert, fragmentShader: div_frag, uniforms: divUni
+  }));
+
+  /* Poisson pressure pass */
+  var poisUni = {
+    boundarySpace: { value: cellScale.clone() },
+    pressure:      { value: prs_0.texture },
+    divergence:    { value: divFBO.texture },
+    px:            { value: cellScale.clone() }
+  };
+  var poisScene = makeScene(new T.RawShaderMaterial({
+    vertexShader: face_vert, fragmentShader: pois_frag, uniforms: poisUni
+  }));
+
+  /* Pressure correction pass */
+  var pressUni = {
+    boundarySpace: { value: cellScale.clone() },
+    pressure:      { value: prs_0.texture },
+    velocity:      { value: vel_1.texture },
+    px:            { value: cellScale.clone() },
+    dt:            { value: DT }
+  };
+  var pressScene = makeScene(new T.RawShaderMaterial({
+    vertexShader: face_vert, fragmentShader: press_frag, uniforms: pressUni
+  }));
+
+  /* Color output pass */
+  var colorUni = {
+    boundarySpace: { value: new T.Vector2() },
+    velocity:      { value: vel_0.texture },
+    palette:       { value: mkPalette(COLORS) },
+    bgColor:       { value: BG_COLOR }
+  };
+  var colorScene = makeScene(new T.RawShaderMaterial({
+    vertexShader: face_vert, fragmentShader: color_frag,
+    transparent: true, depthWrite: false, uniforms: colorUni
+  }));
+
+  /* ── mouse state ── */
+  var mCur = new T.Vector2(0, 0);
+  var mOld = new T.Vector2(0, 0);
+  var mDiff = new T.Vector2(0, 0);
+  var lastInteract = performance.now();
+
+  window.addEventListener('mousemove', function(e) {
+    mCur.set(
+      (e.clientX / window.innerWidth)  * 2 - 1,
+      -((e.clientY / window.innerHeight) * 2 - 1)
+    );
+    lastInteract = performance.now();
+  });
+  window.addEventListener('touchmove', function(e) {
+    var t = e.touches[0];
+    mCur.set(
+      (t.clientX / window.innerWidth)  * 2 - 1,
+      -((t.clientY / window.innerHeight) * 2 - 1)
+    );
+    lastInteract = performance.now();
+  }, { passive: true });
+  window.addEventListener('touchstart', function(e) {
+    lastInteract = performance.now();
+  }, { passive: true });
+
+  /* ── auto-driver ── */
+  var autoCur = new T.Vector2(0, 0);
+  var autoTgt = new T.Vector2(0.4, 0.2);
+  var autoActive = false;
+  var autoStart = 0;
+  var autoLastT = performance.now();
+  function pickAutoTarget() {
+    var m = 0.15;
+    autoTgt.set((Math.random()*2-1)*(1-m), (Math.random()*2-1)*(1-m));
+  }
+  pickAutoTarget();
+
+  /* ── render helper ── */
+  function renderTo(scene, fbo) {
+    renderer.setRenderTarget(fbo || null);
+    renderer.render(scene, cam);
+    renderer.setRenderTarget(null);
+  }
+
+  /* ── simulation step ── */
+  function simulate() {
+    /* advect vel_0 → vel_1 */
+    advUni.velocity.value = vel_0.texture;
+    advUni.isBFECC.value  = USE_BFECC;
+    renderTo(advScene, vel_1);
+
+    /* add mouse force to vel_1 (additive) */
+    forceUni.force.value.set(
+      (mDiff.x / 2) * MOUSE_FORCE,
+      (mDiff.y / 2) * MOUSE_FORCE
+    );
+    forceUni.center.value.copy(mCur);
+    forceUni.scale.value.set(CURSOR_SIZE, CURSOR_SIZE);
+    renderTo(forceScene, vel_1);
+
+    /* divergence of vel_1 → divFBO */
+    divUni.velocity.value = vel_1.texture;
+    renderTo(divScene, divFBO);
+
+    /* poisson pressure solve (ping-pong 32x) */
+    var pIn = prs_0, pOut = prs_1;
+    for (var i = 0; i < ITER_POISSON; i++) {
+      poisUni.pressure.value  = pIn.texture;
+      poisUni.divergence.value = divFBO.texture;
+      renderTo(poisScene, pOut);
+      var tmp = pIn; pIn = pOut; pOut = tmp;
+    }
+    /* pIn is now the last rendered-to pressure FBO */
+
+    /* pressure correction: vel_1 + pIn → vel_0 */
+    pressUni.velocity.value = vel_1.texture;
+    pressUni.pressure.value = pIn.texture;
+    renderTo(pressScene, vel_0);
+
+    /* output vel_0 → screen */
+    colorUni.velocity.value = vel_0.texture;
+    renderTo(colorScene, null);
+  }
+
+  /* ── resize ── */
+  function resize() {
+    W = mount.clientWidth  || window.innerWidth;
+    H = mount.clientHeight || window.innerHeight;
+    renderer.setSize(W, H, false);
+    fW = Math.max(1, Math.round(RESOLUTION * W));
+    fH = Math.max(1, Math.round(RESOLUTION * H));
+    cellScale.set(1/fW, 1/fH);
+    fboSize.set(fW, fH);
+    [vel_0, vel_1, prs_0, prs_1, divFBO].forEach(function(f){ f.setSize(fW, fH); });
+    [advUni, forceUni, divUni, poisUni, pressUni].forEach(function(u){
+      if (u.px)            u.px.value.copy(cellScale);
+      if (u.boundarySpace) u.boundarySpace.value.copy(cellScale);
+      if (u.fboSize)       u.fboSize.value.copy(fboSize);
+    });
+  }
+  window.addEventListener('resize', resize);
+
+  /* ── render loop ── */
+  function loop(ts) {
+    requestAnimationFrame(loop);
+
+    /* auto-driver */
+    var now = ts;
+    var idle = now - lastInteract;
+    if (idle > AUTO_DELAY) {
+      if (!autoActive) {
+        autoActive = true;
+        autoCur.copy(mCur);
+        autoStart = now;
+        autoLastT = now;
+      }
+      var dtA = Math.min((now - autoLastT) / 1000, 0.1);
+      autoLastT = now;
+      var dir = new T.Vector2().subVectors(autoTgt, autoCur);
+      if (dir.length() < 0.02) {
+        pickAutoTarget();
+      } else {
+        var ramp = Math.min(1, (now - autoStart) / AUTO_RAMP);
+        ramp = ramp * ramp * (3 - 2*ramp);
+        dir.normalize().multiplyScalar(AUTO_SPEED * dtA * ramp);
+        autoCur.add(dir);
+        mCur.copy(autoCur);
+      }
+    } else {
+      autoActive = false;
+    }
+
+    /* mouse diff */
+    mDiff.subVectors(mCur, mOld);
+    if (autoActive) mDiff.multiplyScalar(AUTO_INT);
+    mOld.copy(mCur);
+
+    simulate();
+  }
+  requestAnimationFrame(loop);
+
+  /* pause when tab hidden */
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) { /* noop — RAF auto-pauses */ }
+  });
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   2. ELECTRIC BORDER FLUID BACKGROUND — pure WebGL1, zero deps
+   ══════════════════════════════════════════════════════════════ */
+(function() {
+  var cv = document.getElementById('bg-canvas');
+  if (!cv) return; /* element not present in this page — skip silently */
+  var gl = cv.getContext('webgl') || cv.getContext('experimental-webgl');
+  if (!gl) return;
+
+  var VS = 'attribute vec2 aP; void main(){ gl_Position=vec4(aP,0.,1.); }';
+
+  var FS = [
+    'precision highp float;',
+    'uniform vec2  uRes;',
+    'uniform float uTime;',
+    'uniform vec2  uMouse;',
+
+    'float h(vec2 p){',
+    '  p=fract(p*vec2(234.34,435.345));',
+    '  p+=dot(p,p+34.23);',
+    '  return fract(p.x*p.y);',
+    '}',
+
+    'float n(vec2 p){',
+    '  vec2 i=floor(p),f=fract(p);',
+    '  vec2 u=f*f*(3.-2.*f);',
+    '  return mix(mix(h(i),h(i+vec2(1,0)),u.x),',
+    '             mix(h(i+vec2(0,1)),h(i+vec2(1)),u.x),u.y);',
+    '}',
+
+    'float fbm(vec2 p){',
+    '  float v=0.,a=.5;',
+    '  for(int i=0;i<6;i++){v+=a*n(p);p=p*2.1+vec2(1.7,9.2);a*=.5;}',
+    '  return v;',
+    '}',
+
+    'void main(){',
+    '  vec2 uv=gl_FragCoord.xy/uRes;',
+    '  float t=uTime*.35;',
+    '  vec2 p=uv*3.5-1.75;',
+    '  float md=length(uv-uMouse);',
+    '  p+=(uMouse-uv)*exp(-md*1.8)*2.2;',   /* stronger mouse warp */
+    '  vec2 q=vec2(fbm(p+t),fbm(p+vec2(5.2,1.3)+t*.7));',
+    '  vec2 r=vec2(fbm(p+4.*q+vec2(1.7,9.2)+t*.5),',
+    '              fbm(p+4.*q+vec2(8.3,2.8)+t*.4));',
+    '  float f=fbm(p+4.*r);',
+    /* palette: white → lavender → pink → ice blue  */
+    '  vec3 c1=vec3(0.96,0.95,0.99);',   /* near-white */
+    '  vec3 c2=vec3(0.68,0.63,0.95);',   /* soft lavender */
+    '  vec3 c3=vec3(0.97,0.68,0.87);',   /* soft rose-pink */
+    '  vec3 c4=vec3(0.65,0.86,0.98);',   /* ice blue */
+    '  vec3 col=mix(c1,c2,smoothstep(0.,0.4,f));',
+    '  col=mix(col,c3,smoothstep(0.3,0.7,f));',
+    '  col=mix(col,c4,smoothstep(0.65,1.,f));',
+    '  col+=0.06*vec3(length(q),length(r)*.4,length(r+q)*.3);',
+    '  col=clamp(col,0.,1.);',
+    '  gl_FragColor=vec4(col,1.);',
+    '}'
+  ].join('\n');
+
+  function mkShader(type, src) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+      console.error('Shader error:', gl.getShaderInfoLog(s));
+    return s;
+  }
+
+  var prog = gl.createProgram();
+  gl.attachShader(prog, mkShader(gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, mkShader(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
+    console.error('Link error:', gl.getProgramInfoLog(prog));
+  gl.useProgram(prog);
+
+  var buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER,
+    new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+  var aP = gl.getAttribLocation(prog, 'aP');
+  gl.enableVertexAttribArray(aP);
+  gl.vertexAttribPointer(aP, 2, gl.FLOAT, false, 0, 0);
+
+  var uRes   = gl.getUniformLocation(prog, 'uRes');
+  var uTime  = gl.getUniformLocation(prog, 'uTime');
+  var uMouse = gl.getUniformLocation(prog, 'uMouse');
+
+  var mx = 0.5, my = 0.5;
+  var isDragging = false;
+  var FROZEN_TIME = 8.2; /* static scene snapshot — light palette looks best here */
+
+  /* mouse move — react to any movement, no click needed */
+  window.addEventListener('mousemove', function(e) {
+    mx = e.clientX / window.innerWidth;
+    my = 1.0 - e.clientY / window.innerHeight;
+  });
+
+  /* touch drag */
+  window.addEventListener('touchstart', function(e) {
+    var t = e.touches[0];
+    mx = t.clientX / window.innerWidth;
+    my = 1.0 - t.clientY / window.innerHeight;
+  }, { passive: true });
+  window.addEventListener('touchmove', function(e) {
+    var t = e.touches[0];
+    mx = t.clientX / window.innerWidth;
+    my = 1.0 - t.clientY / window.innerHeight;
+  }, { passive: true });
+
+  function resize() {
+    cv.width  = window.innerWidth;
+    cv.height = window.innerHeight;
+    gl.viewport(0, 0, cv.width, cv.height);
+    gl.uniform2f(uRes, cv.width, cv.height);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+
+  function loop() {
+    requestAnimationFrame(loop);
+    gl.uniform1f(uTime, FROZEN_TIME);
+    gl.uniform2f(uMouse, mx, my);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  requestAnimationFrame(loop);
+})();
+
+
+/* ══════════════════════════════════════════════════════════════
+   2. ELECTRIC BORDER — Perlin noise canvas effect
+   ══════════════════════════════════════════════════════════════ */
+function noise2D(x, y) {
+  function r(n){ return (Math.sin(n * 12.9898) * 43758.5453) % 1; }
+  var i=Math.floor(x), j=Math.floor(y), fx=x-i, fy=y-j;
+  var a=r(i+j*57), b=r(i+1+j*57), c=r(i+(j+1)*57), d=r(i+1+(j+1)*57);
+  var ux=fx*fx*(3-2*fx), uy=fy*fy*(3-2*fy);
+  return a*(1-ux)*(1-uy)+b*ux*(1-uy)+c*(1-ux)*uy+d*ux*uy;
+}
+
+function fbm(x, t, seed) {
+  var v=0, amp=0.22, freq=10, lac=1.6, gain=0.7;
+  for(var i=0;i<8;i++){
+    v += amp * noise2D(freq*x + seed*100, t*freq*0.3);
+    freq*=lac; amp*=gain;
+  }
+  return v;
+}
+
+function getRRPoint(t, l, top, w, h, r) {
+  var sw=w-2*r, sh=h-2*r, arc=(Math.PI*r)/2;
+  var P=2*sw+2*sh+4*arc, d=t*P, ac=0;
+  if(d<=ac+sw){var p=(d-ac)/sw;return{x:l+r+p*sw,y:top};} ac+=sw;
+  if(d<=ac+arc){var p=(d-ac)/arc,a=-Math.PI/2+p*Math.PI/2;return{x:l+w-r+r*Math.cos(a),y:top+r+r*Math.sin(a)};} ac+=arc;
+  if(d<=ac+sh){var p=(d-ac)/sh;return{x:l+w,y:top+r+p*sh};} ac+=sh;
+  if(d<=ac+arc){var p=(d-ac)/arc,a=p*Math.PI/2;return{x:l+w-r+r*Math.cos(a),y:top+h-r+r*Math.sin(a)};} ac+=arc;
+  if(d<=ac+sw){var p=(d-ac)/sw;return{x:l+w-r-p*sw,y:top+h};} ac+=sw;
+  if(d<=ac+arc){var p=(d-ac)/arc,a=Math.PI/2+p*Math.PI/2;return{x:l+r+r*Math.cos(a),y:top+h-r+r*Math.sin(a)};} ac+=arc;
+  if(d<=ac+sh){var p=(d-ac)/sh;return{x:l,y:top+h-r-p*sh};} ac+=sh;
+  var p=(d-ac)/arc,a=Math.PI+p*Math.PI/2;
+  return{x:l+r+r*Math.cos(a),y:top+r+r*Math.sin(a)};
+}
+
+function makeElectricBorder(el, color) {
+  el.classList.add('ml-electric-wrap');
+  var cvs = document.createElement('canvas');
+  cvs.className = 'eb-canvas';
+  el.appendChild(cvs);
+  var ctx = cvs.getContext('2d');
+  var time = 0, last = 0, raf;
+  var OFF = 24, disp = 28;
+
+  function resize() {
+    var rect = el.getBoundingClientRect();
+    var W = rect.width + OFF*2, H = rect.height + OFF*2;
+    var dpr = Math.min(devicePixelRatio||1, 2);
+    cvs.width = W*dpr; cvs.height = H*dpr;
+    cvs.style.width = W+'px'; cvs.style.height = H+'px';
+    ctx.scale(dpr, dpr);
+  }
+  resize();
+  new ResizeObserver(resize).observe(el);
+
+  (function draw(ts) {
+    raf = requestAnimationFrame(draw);
+    var dt = (ts - last) / 1000; last = ts;
+    time += dt * 1.2;
+
+    var W = parseFloat(cvs.style.width), H = parseFloat(cvs.style.height);
+    var dpr = Math.min(devicePixelRatio||1, 2);
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.scale(dpr, dpr);
+
+    var l=OFF, t=OFF, w=W-OFF*2, h=H-OFF*2, r=14;
+    var samples = Math.floor((2*(w+h))/2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 1.8;
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+    ctx.shadowColor = color;
+    ctx.shadowBlur  = 12;
+    ctx.beginPath();
+    for(var i=0;i<=samples;i++){
+      var p  = i/samples;
+      var pt = getRRPoint(p, l, t, w, h, r);
+      var dx = fbm(p*8, time, 0) * disp;
+      var dy = fbm(p*8, time, 1) * disp;
+      if(i===0) ctx.moveTo(pt.x+dx, pt.y+dy);
+      else       ctx.lineTo(pt.x+dx, pt.y+dy);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  })(0);
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   3. ML DATA — fetch from API and render
+   ══════════════════════════════════════════════════════════════ */
+(function() {
+  /* Reveal sections with stagger */
+  var sections = document.querySelectorAll('.section');
+  sections.forEach(function(s, i) {
+    setTimeout(function(){ s.classList.add('reveal'); }, 80 + i * 120);
+  });
+
+  /* API client (mirrors the main app) */
+  /* Handles localhost, [::] (IPv6 loopback), and 127.0.0.1 — all point to the backend on port 8000 */
+  var _h = window.location.hostname;
+  var BASE = (_h === 'localhost' || _h === '127.0.0.1' || _h === '' || _h === '::1')
+    ? 'http://localhost:8000'
+    : '';
+
+  async function apiFetch(path) {
+    var r = await fetch(BASE + path);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }
+
+  /* ── render helpers ── */
+  function renderCards(model) {
+    var el = document.getElementById('ml-model-cards');
+    if (!el || !model) return;
+    var cards = [
+      { label:'Architecture',  value:model.type,       icon:'🧠' },
+      { label:'ROC-AUC Score', value:model.roc_auc,    icon:'⚡' },
+      { label:'Training Size', value:model.n_samples,  icon:'📚' },
+      { label:'Vector Size',   value:model.n_features, icon:'📐' },
+    ];
+    el.innerHTML = cards.map(function(c){
+      return '<div class="ml-card">'
+        + '<div class="ml-card-icon">'+c.icon+'</div>'
+        + '<div class="ml-card-val">'+c.value+'</div>'
+        + '<div class="ml-card-lab">'+c.label+'</div>'
+        + '</div>';
+    }).join('');
+
+    /* Add electric borders after cards exist */
+    setTimeout(function() {
+      var colors = ['#1db97a','#2d8ef0','#a855f7','#f59e0b'];
+      el.querySelectorAll('.ml-card').forEach(function(card, i) {
+        makeElectricBorder(card, colors[i % colors.length]);
+      });
+    }, 300);
+  }
+
+  function renderFeatures(features, importances) {
+    var el = document.getElementById('ml-features');
+    if (!el || !importances) return;
+    var sorted = Object.entries(importances).sort(function(a,b){ return b[1]-a[1]; });
+    var max = (sorted[0] || [0,1])[1] || 1;
+    el.innerHTML = sorted.map(function(entry) {
+      var feat = entry[0], imp = entry[1];
+      var pct = Math.round((imp / max) * 100);
+      var color = pct > 60 ? '#1db97a' : pct > 35 ? '#2d8ef0' : '#c4870a';
+      return '<div class="ml-feature-row">'
+        + '<div class="ml-feature-name">'+feat.replace(/_/g,' ')+'</div>'
+        + '<div class="ml-feature-bar-bg"><div class="ml-feature-bar-val" style="width:0;background:'+color+';" data-w="'+pct+'%"></div></div>'
+        + '<div class="ml-feature-pct">'+(imp*100).toFixed(1)+'%</div>'
+        + '</div>';
+    }).join('');
+    setTimeout(function(){
+      el.querySelectorAll('.ml-feature-bar-val').forEach(function(b){
+        b.style.width = b.getAttribute('data-w');
+      });
+    }, 400);
+  }
+
+  function renderPipeline(stages) {
+    var el = document.getElementById('ml-pipeline');
+    if (!el || !stages) return;
+    el.innerHTML = stages.map(function(s, i) {
+      return '<div class="ml-pipeline-step">'
+        + '<div class="ml-step-box">'
+        +   '<div class="ml-step-icon">'+s.icon+'</div>'
+        +   '<div class="ml-step-name">'+s.name+'</div>'
+        +   '<div class="ml-step-desc">'+s.desc+'</div>'
+        + '</div>'
+        + (i < stages.length-1 ? '<div class="ml-step-arrow">→</div>' : '')
+        + '</div>';
+    }).join('');
+  }
+
+  function renderLive(lp) {
+    var el = document.getElementById('ml-live-prediction');
+    if (!el || !lp) return;
+    var riskColor = lp.predicted_output.risk_level === 'high' ? '#c94b2c'
+                  : lp.predicted_output.risk_level === 'medium' ? '#c4870a' : '#1db97a';
+    var feats = lp.input_features;
+    el.innerHTML = '<div style="display:flex;flex-direction:column;justify-content:space-between;height:100%;padding:20px;background:rgba(10,8,30,0.85);border:1px solid rgba(255,255,255,0.10);border-radius:16px;">'
+      + '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">'
+      + Object.entries(feats).map(function(kv){
+          return '<div style="border-left:2px solid rgba(255,255,255,0.05);padding-left:10px;">'
+            + '<div style="font-size:9px;color:rgba(240,239,248,0.45);text-transform:uppercase;letter-spacing:.05em;">'+kv[0].replace(/_/g,' ')+'</div>'
+            + '<div style="font-size:14px;font-weight:600;color:#f0eff8;">'+(typeof kv[1]==='number'?kv[1].toFixed(1):kv[1])+'</div>'
+            + '</div>';
+        }).join('')
+      + '</div>'
+      + '<div style="margin-top:24px;display:flex;align-items:center;gap:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.05);">'
+        + '<div style="text-align:center;">'
+          + '<div style="font-size:42px;font-weight:800;color:'+riskColor+';line-height:1;">'+Math.round(lp.predicted_output.risk_score)+'</div>'
+          + '<div style="font-size:10px;color:'+riskColor+';font-weight:600;text-transform:uppercase;margin-top:4px;">'+lp.predicted_output.risk_level+'</div>'
+        + '</div>'
+        + '<div>'
+          + '<div style="font-size:13px;font-weight:600;color:#f0eff8;">Neural Inference</div>'
+          + '<div style="font-size:11px;color:rgba(240,239,248,0.45);">Instance: Ward '+lp.ward_id+' · '+lp.model_version+'</div>'
+        + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  function renderTable(rows, features) {
+    var table = document.getElementById('ml-data-table');
+    if (!table || !rows || !rows.length) return;
+    var cols = ['rainfall_7d','temp_avg','humidity_avg','population_density','dengue_cases_30d','month','label'];
+    var labels = {
+      rainfall_7d:'Rain 7d (mm)', temp_avg:'Temp (°C)', humidity_avg:'Humidity (%)',
+      population_density:'Pop Density', dengue_cases_30d:'Cases 30d', month:'Month', label:'Outbreak'
+    };
+    var thead = '<thead><tr>'+cols.map(function(c){
+      return '<th>'+( labels[c]||c )+'</th>';
+    }).join('')+'</tr></thead>';
+    var tbody = '<tbody>'+rows.slice(0,10).map(function(row, ri){
+      var bg = ri%2===0 ? 'rgba(26,16,64,0.03)' : 'transparent';
+      return '<tr style="background:'+bg+';">'+cols.map(function(c){
+        var val = row[c], color = '#f0eff8';
+        if(c==='label'){ color=val===1?'#c94b2c':'#1db97a'; val=val===1?'🔴 Yes':'🟢 No'; }
+        if(c==='rainfall_7d'&&val>40) color='#2d8ef0';
+        return '<td style="color:'+color+';">' +(typeof val==='number'?(Number.isInteger(val)?val:val.toFixed(1)):val)+'</td>';
+      }).join('')+'</tr>';
+    }).join('')+'</tbody>';
+    table.innerHTML = thead+tbody;
+  }
+
+  /* ── subtitle fallback ── */
+  function setSubtitle(txt){
+    var el = document.getElementById('ml-model-subtitle');
+    if(el) el.textContent = txt;
+  }
+
+  /* ── load data ── */
+  apiFetch('/api/v1/ml/info').then(function(data) {
+    setSubtitle((data.model.type||'XGBoost')+' · Hyper-tuned Hybrid Architecture · Pipeline Active');
+    renderCards(data.model);
+    renderFeatures(data.features, data.feature_importances);
+    renderPipeline(data.pipeline_stages);
+    renderLive(data.live_prediction);
+    renderTable(data.sample_data, data.features);
+  }).catch(function(err) {
+    setSubtitle('Intelligence Offline — using demo data');
+    /* ── demo fallback so the page always looks good ── */
+    renderCards({ type:'XGBoost Classifier', roc_auc:'0.94', n_samples:14560, n_features:9 });
+    renderFeatures([], {
+      rainfall_7d:0.586, month:0.310, rainfall_14d:0.035,
+      humidity_avg:0.033, temp_avg:0.022, population_density:0.013, report_count_7d:0.001
+    });
+    renderPipeline([
+      { icon:'📥', name:'Ingest', desc:'IDSP report ingestion & ward mapping' },
+      { icon:'🔧', name:'Feature Eng.', desc:'Rolling averages, lag features' },
+      { icon:'🧠', name:'XGBoost', desc:'Gradient-boosted ensemble prediction' },
+      { icon:'📊', name:'Risk Score', desc:'0-100 calibrated outbreak probability' },
+      { icon:'🔔', name:'Alert', desc:'SMS + dashboard notification dispatch' },
+    ]);
+    renderLive({ ward_id:1, model_version:'v1-ml+disease-hybrid',
+      input_features:{ rainfall_7d:0.0, rainfall_14d:0.0, temp_avg:30.0, humidity_avg:36.3, dengue_cases_30d:90.0, report_count_7d:0.0, month:4.0 },
+      predicted_output:{ risk_score:30, risk_level:'low' } });
+    renderTable([
+      { rainfall_7d:12.4, temp_avg:29.1, humidity_avg:74, population_density:18200, dengue_cases_30d:4, month:7, label:0 },
+      { rainfall_7d:88.2, temp_avg:27.5, humidity_avg:91, population_density:22400, dengue_cases_30d:47, month:8, label:1 },
+      { rainfall_7d:45.3, temp_avg:28.8, humidity_avg:82, population_density:15800, dengue_cases_30d:21, month:9, label:1 },
+      { rainfall_7d:8.1,  temp_avg:32.0, humidity_avg:61, population_density:12000, dengue_cases_30d:2,  month:3, label:0 },
+      { rainfall_7d:62.0, temp_avg:26.4, humidity_avg:88, population_density:19900, dengue_cases_30d:38, month:7, label:1 },
+    ], []);
+  });
+})();
+
+</script>
+</body>
+</html>
