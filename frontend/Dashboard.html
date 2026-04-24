@@ -2808,7 +2808,9 @@
 
                 e.preventDefault();
                 touchY = e.touches[0].clientY;
-                displayedFrame = Math.max(0, Math.min(FRAME_COUNT - 1, displayedFrame + dy / 25));
+                
+                // Increase speed on mobile (6px per frame instead of 25px)
+                displayedFrame = Math.max(0, Math.min(FRAME_COUNT - 1, displayedFrame + dy / 6));
                 drawFrame(displayedFrame);
                 if (displayedFrame < FRAME_COUNT - 1) animDone = false;
             }
@@ -2835,7 +2837,7 @@
                 sizeCanvas(); drawFrame(displayedFrame);
             }, { passive: true });
 
-            // ── Preload all 144 frames ──
+            // ── Preload all frames ──
             requestAnimationFrame(function () {
                 sizeCanvas();
                 for (var i = 0; i < FRAME_COUNT; i++) {
