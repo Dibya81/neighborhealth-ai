@@ -929,11 +929,8 @@ function makeElectricBorder(el, color) {
   });
 
   /* API client (mirrors the main app) */
-  /* Handles localhost, [::] (IPv6 loopback), and 127.0.0.1 — all point to the backend on port 8000 */
-  var _h = window.location.hostname;
-  var BASE = (_h === 'localhost' || _h === '127.0.0.1' || _h === '' || _h === '::1')
-    ? 'http://localhost:8000'
-    : '';
+  /* Backend API Base URL */
+  var BASE = 'https://neighborhealth-backend.onrender.com';
 
   async function apiFetch(path) {
     var r = await fetch(BASE + path);

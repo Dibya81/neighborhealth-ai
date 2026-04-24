@@ -1640,8 +1640,8 @@
     <section id="spider-hero" class="spider-hero-section">
         <div class="spider-wrapper">
             <div class="spider-mask-group">
-                <img src="assets/spider/mask.png" alt="Spider-Man Mask" class="spider-base-image">
-                <img src="assets/spider/face.png" alt="Revealed Face" class="spider-overlay-image">
+                <img src="assets/images/mask.webp" alt="Spider-Man Mask" class="spider-base-image" loading="lazy">
+                <img src="assets/images/face.webp" alt="Revealed Face" class="spider-overlay-image" loading="lazy">
                 <div class="spider-info">
                     <h1>Identity Reveal</h1>
                     <p>Hover to uncover the health agent</p>
@@ -2304,7 +2304,7 @@
         <div class="footer-meta">Built for Build for Bengaluru Hackathon · 2026 · Disease Prevention theme</div>
         <div class="footer-links">
             <a href="#hero">Back to top</a>
-            <a href="http://localhost:3000" target="_blank">Open App</a>
+            <a href="index.html">Open App</a>
         </div>
     </footer>
 
@@ -2664,11 +2664,11 @@
         // Page scroll is BLOCKED while canvas is visible + frames loading/playing.
         // Wheel / touch events advance frames. Page resumes after last frame.
         (function () {
-            var FRAME_COUNT = 144;
-            var BASE_PATH = 'assets/photos/frame_';
+            var FRAME_COUNT = 80;
+            var BASE_PATH = 'assets/frames/frame_';
 
             function frameSrc(i) {
-                return BASE_PATH + ('000' + i).slice(-3) + '_delay-0.055s.png';
+                return BASE_PATH + ('000' + i).slice(-3) + '.webp';
             }
 
             var wrap = document.getElementById('problemCanvasWrap');
@@ -2685,36 +2685,50 @@
             var totalLoaded = 0;
             var allLoaded = false;
             var displayedFrame = 0;   // float — accumulated scroll
-            var animDone = false; // true once frame 143 reached
+            var animDone = false; // true once frame 80 reached
             var scrollLocked = false;
             var frameAccum = 0;     // accumulated wheel delta (px)
+            var drawPending = false;
 
-            // ── Size canvas to fill the wrap exactly (now 100vw/100vh) ──
+            // ── Size canvas to fill the wrap exactly with DPR fix ──
             function sizeCanvas() {
                 var w = window.innerWidth;
                 var h = window.innerHeight;
-                if (canvas.width !== w || canvas.height !== h) {
-                    canvas.width = w;
-                    canvas.height = h;
+                var dpr = window.devicePixelRatio || 1;
+                var targetW = Math.floor(w * dpr);
+                var targetH = Math.floor(h * dpr);
+                
+                if (canvas.width !== targetW || canvas.height !== targetH) {
+                    canvas.width = targetW;
+                    canvas.height = targetH;
+                    canvas.style.width = w + 'px';
+                    canvas.style.height = h + 'px';
+                    ctx.scale(dpr, dpr);
                 }
             }
 
             // ── Draw frame: Full Screen Stretch (No Cropping / No Zoom) ──
             function drawFrame(idx) {
-                idx = Math.max(0, Math.min(FRAME_COUNT - 1, Math.round(idx)));
-                var t = idx;
-                while (t >= 0 && !frameLoaded[t]) t--;
-                if (t < 0) return;
-                var img = images[t];
-                if (!img || !img.naturalWidth) return;
+                if (drawPending) return;
+                drawPending = true;
+                requestAnimationFrame(function() {
+                    drawPending = false;
+                    idx = Math.max(0, Math.min(FRAME_COUNT - 1, Math.round(idx)));
+                    var t = idx;
+                    while (t >= 0 && !frameLoaded[t]) t--;
+                    if (t < 0) return;
+                    var img = images[t];
+                    if (!img || !img.naturalWidth) return;
 
-                var cw = canvas.width, ch = canvas.height;
-                ctx.clearRect(0, 0, cw, ch);
-                // Stretch to fill screen as requested (True Full Screen, No Cut)
-                ctx.drawImage(img, 0, 0, cw, ch);
+                    var w = window.innerWidth;
+                    var h = window.innerHeight;
+                    ctx.clearRect(0, 0, w, h);
+                    // Stretch to fill screen as requested (True Full Screen, No Cut)
+                    ctx.drawImage(img, 0, 0, w, h);
 
-                // Update progress bar
-                if (progBar) progBar.style.width = Math.round(idx / (FRAME_COUNT - 1) * 100) + '%';
+                    // Update progress bar
+                    if (progBar) progBar.style.width = Math.round(idx / (FRAME_COUNT - 1) * 100) + '%';
+                });
             }
 
             // ── Scroll lock / unlock ──

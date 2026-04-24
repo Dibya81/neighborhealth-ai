@@ -139,38 +139,40 @@ html { -webkit-text-size-adjust: 100%; }
 /* ── Mobile (≤ 600px) ── */
 @media (max-width: 600px) {
 
-  /* Top-left HUD: full-width strip at top */
+  /* Top-left HUD: stack brand and search */
   .hud-topleft-container {
     width: calc(100vw - 24px);
     top: 10px;
     left: 12px;
     right: 12px;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 8px;
+    box-sizing: border-box;
   }
 
-  /* Brand + search side by side */
-  .hud-brand-panel { padding: 10px 14px; flex: 1; min-width: 0; }
-  .hud-search-panel { flex: 1; min-width: 0; }
-  .search-wrap { width: 100%; }
+  /* Brand + search stacked */
+  .hud-brand-panel { padding: 10px 14px; width: 100%; box-sizing: border-box; }
+  .hud-search-panel { width: 100%; box-sizing: border-box; }
+  .search-wrap { width: 100%; box-sizing: border-box; }
   .hud-meta-panel { display: none; }
 
   /* Disease pills: full-width scrollable strip below brand */
   .hud-top-center {
     top: auto;
-    bottom: 140px;
+    bottom: 120px;
     left: 12px;
-    right: 12px;
+    right: auto;
     transform: none;
-    max-width: none;
+    max-width: calc(100vw - 24px);
     width: calc(100vw - 24px);
+    box-sizing: border-box;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--r-lg);
     backdrop-filter: var(--blur);
     -webkit-backdrop-filter: var(--blur);
-    padding: 4px;
+    padding: 6px;
     z-index: 101;
   }
 
@@ -180,28 +182,36 @@ html { -webkit-text-size-adjust: 100%; }
     white-space: nowrap;
     scrollbar-width: none;
     display: flex;
-    gap: 4px;
+    gap: 8px;
     padding: 2px 4px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   /* Bottom left summary: sits above disease pills */
   .hud-bottomleft {
     width: calc(100vw - 24px);
-    bottom: 200px;
+    bottom: 180px;
     left: 12px;
     right: 12px;
     padding: 10px 14px;
+    box-sizing: border-box;
   }
 
   /* FABs: row across bottom-right */
   .hud-bottomright {
     bottom: 16px;
+    left: 12px;
     right: 12px;
     flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
     background: none;
     border: none;
     backdrop-filter: none;
+    box-sizing: border-box;
+    width: calc(100vw - 24px);
   }
 
   .fab { width: 44px; height: 44px; }
@@ -228,13 +238,13 @@ html { -webkit-text-size-adjust: 100%; }
     top: auto !important;
   }
 
-  /* Hide legend on mobile */
-  .hud-legend { display: none; }
+  /* Hide legend on mobile explicitly */
+  .hud-legend { display: none !important; }
 
   /* Profile pill: icon only */
   .user-name-display { display: none; }
   .profile-pill { padding: 4px 8px; }
-  .hud-topright { top: 10px; right: 12px; }
+  .hud-topright { top: 10px; right: 12px; z-index: 1000; }
 
   /* Ward panel: full-screen bottom-sheet on mobile */
   .ward-panel {

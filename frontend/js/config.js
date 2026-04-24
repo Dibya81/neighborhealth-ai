@@ -3,7 +3,7 @@
  * Change API_BASE_URL when deploying.
  */
 window.NH_CONFIG = {
-  API_BASE_URL: 'http://127.0.0.1:8000',   // Force IPv4 for local dev consistency
+  API_BASE_URL: 'https://neighborhealth-backend.onrender.com',
   MAP_DARK_URL: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
   MAP_SATELLITE_URL: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   MAP_ATTRIBUTION: '© OpenStreetMap contributors, © CARTO / Esri',
