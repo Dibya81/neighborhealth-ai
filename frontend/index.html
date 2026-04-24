@@ -6,10 +6,12 @@
   <title>NeighborHealth — Bengaluru</title>
   <meta name="description" content="Hyperlocal dengue risk prediction and early warning for Bengaluru" />
 
-  <!-- Pre-load Auth Guard: Redirect unauthenticated users to Dashboard.html (Landing) -->
+  <!-- Pre-load Auth Guard: (Temporarily disabled) -->
   <script>
-    if (!localStorage.getItem('neighborhealth_user')) {
-      window.location.href = 'Dashboard.html';
+    // ── MANDATORY AUTH GUARD (Disabled for testing) ──────────────────────
+    const savedUserRaw = localStorage.getItem('neighborhealth_user');
+    if (!savedUserRaw && !window.location.pathname.includes('login.html')) {
+      // window.location.href = 'login.html';
     }
   </script>
 

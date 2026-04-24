@@ -19,12 +19,12 @@ const DISEASES = [
 ];
 
 (async function() {
-  // ── MANDATORY AUTH GUARD ──────────────────────────────
+  // ── MANDATORY AUTH GUARD (Disabled for testing) ──────────────────────
   const savedUserRaw = localStorage.getItem('neighborhealth_user');
   if (!savedUserRaw && !window.location.pathname.includes('login.html')) {
-    window.NH_LOG.ui("No session found, redirecting to Landing Page");
-    window.location.href = 'Dashboard.html';
-    return;
+    window.NH_LOG.ui("No session found, bypassing redirect for testing.");
+    // window.location.href = 'Dashboard.html';
+    // return;
   }
   // ──────────────────────────────────────────────────────
 
