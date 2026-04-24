@@ -18,6 +18,8 @@ const DISEASES = [
   { id: 'copd', label: 'COPD' }
 ];
 
+window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.classList.remove('hidden');
+
 (async function() {
   // ── MANDATORY AUTH GUARD (Disabled for testing) ──────────────────────
   const savedUserRaw = localStorage.getItem('neighborhealth_user');
@@ -53,25 +55,6 @@ const DISEASES = [
     } catch (e) {
       window.NH_LOG.error('Session init failed', e);
     }
-
-    // ── 0.1 Wire UI Early (Avoid ReferenceErrors) ──────────────────
-    (function wireUI() {
-      // Health Check
-      document.getElementById("btn-health-check")?.addEventListener("click", () => {
-        window.location.href = "health-check/index.html";
-      });
-
-      // Travel Modal
-      const travelOverlay = document.getElementById('travel-modal-overlay');
-      const travelClose   = document.getElementById('travel-modal-close');
-      if (travelOverlay) {
-        window.openTravelModal = () => travelOverlay.classList.remove('hidden');
-        travelClose?.addEventListener('click', () => travelOverlay.classList.add('hidden'));
-        travelOverlay.addEventListener('click', e => { 
-          if (e.target === travelOverlay) travelOverlay.classList.add('hidden'); 
-        });
-      }
-    })();
 
     // ── 1. Init map & components ────────────────────────────────────
     if (window.mapComponent) {
