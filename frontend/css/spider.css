@@ -75,7 +75,7 @@
             rgba(0, 0, 0, 0.2) 25%, 
             transparent 40%
         ),
-        url('../assets/spider/mask.png');
+        url('../assets/images/mask.webp');
     
     -webkit-mask-image: 
         radial-gradient(
@@ -85,7 +85,7 @@
             rgba(0, 0, 0, 0.2) 25%, 
             transparent 40%
         ),
-        url('../assets/spider/mask.png');
+        url('../assets/images/mask.webp');
 
     mask-composite: intersect;
     -webkit-mask-composite: source-in;
