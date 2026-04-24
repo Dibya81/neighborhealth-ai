@@ -54,6 +54,25 @@ const DISEASES = [
       window.NH_LOG.error('Session init failed', e);
     }
 
+    // ── 0.1 Wire UI Early (Avoid ReferenceErrors) ──────────────────
+    (function wireUI() {
+      // Health Check
+      document.getElementById("btn-health-check")?.addEventListener("click", () => {
+        window.location.href = "health-check/index.html";
+      });
+
+      // Travel Modal
+      const travelOverlay = document.getElementById('travel-modal-overlay');
+      const travelClose   = document.getElementById('travel-modal-close');
+      if (travelOverlay) {
+        window.openTravelModal = () => travelOverlay.classList.remove('hidden');
+        travelClose?.addEventListener('click', () => travelOverlay.classList.add('hidden'));
+        travelOverlay.addEventListener('click', e => { 
+          if (e.target === travelOverlay) travelOverlay.classList.add('hidden'); 
+        });
+      }
+    })();
+
     // ── 1. Init map & components ────────────────────────────────────
     if (window.mapComponent) {
       await mapComponent.init();
@@ -680,20 +699,14 @@ const DISEASES = [
   }
 
   // ── TRAVEL MODE ──────────────────────────────────────────────────────────
-  (function() {
-    const overlay   = document.getElementById('travel-modal-overlay');
-    const closeBtn  = document.getElementById('travel-modal-close');
-    const checkBtn  = document.getElementById('travel-check-btn');
-    const resultDiv = document.getElementById('travel-result');
-
-    if (!overlay) return;
-
-    // Open from FAB or a button you add to the HUD
-    window.openTravelModal = () => overlay.classList.remove('hidden');
-    closeBtn?.addEventListener('click', () => overlay.classList.add('hidden'));
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.add('hidden'); });
-
-    // Ward search autocomplete for both inputs
+    (function() {
+      const overlay   = document.getElementById('travel-modal-overlay');
+      const checkBtn  = document.getElementById('travel-check-btn');
+      const resultDiv = document.getElementById('travel-result');
+  
+      if (!overlay) return;
+  
+      // Ward search autocomplete for both inputs
     function _wireSearch(inputId, hiddenId, dropdownId) {
       const input    = document.getElementById(inputId);
       const hidden   = document.getElementById(hiddenId);
@@ -754,11 +767,6 @@ const DISEASES = [
         dom.setText(checkBtn, 'Check Travel Risk');
         checkBtn.disabled = false;
       }
-    });
   })();
-
-  // ── HEALTH CHECK REDIRECT ───────────────────────────────────────────────
-  document.getElementById("btn-health-check")?.addEventListener("click", () => {
-    window.location.href = "health-check/index.html";
-  });
+  })();
 })();
