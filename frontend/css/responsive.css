@@ -162,7 +162,7 @@ html { -webkit-text-size-adjust: 100%; }
   /* Disease pills: full-width scrollable strip below brand */
   .hud-top-center {
     top: auto;
-    bottom: 120px;
+    bottom: 160px; /* Lifted higher */
     left: 12px;
     right: auto;
     transform: none;
@@ -193,7 +193,7 @@ html { -webkit-text-size-adjust: 100%; }
   /* Bottom left summary: sits above disease pills */
   .hud-bottomleft {
     width: calc(100vw - 24px);
-    bottom: 180px;
+    bottom: 240px; /* Lifted higher */
     left: 12px;
     right: 12px;
     padding: 10px 14px;
@@ -202,7 +202,7 @@ html { -webkit-text-size-adjust: 100%; }
 
   /* FABs: row across bottom-right */
   .hud-bottomright {
-    bottom: 16px;
+    bottom: 90px; /* High enough to clear iPhone home indicator */
     left: 12px;
     right: 12px;
     flex-direction: row;
