@@ -720,9 +720,26 @@ window.openTravelModal = () => document.getElementById('travel-modal-overlay')?.
     _wireSearch('travel-to-input',   'travel-to-id',   'travel-to-results');
 
     checkBtn?.addEventListener('click', async () => {
-      const fromId = document.getElementById('travel-from-id').value;
-      const toId   = document.getElementById('travel-to-id').value;
-      if (!fromId || !toId) { toast.show('Select both origin and destination wards', 'warning'); return; }
+      let fromId = document.getElementById('travel-from-id').value;
+      let toId   = document.getElementById('travel-to-id').value;
+      const fromName = document.getElementById('travel-from-input').value;
+      const toName   = document.getElementById('travel-to-input').value;
+
+      // Fallback: Try to find ID by name if not selected from dropdown
+      const wards = store.get('wardList') || [];
+      if (!fromId && fromName) {
+        const match = wards.find(w => w.name.toLowerCase() === fromName.toLowerCase());
+        if (match) fromId = match.id;
+      }
+      if (!toId && toName) {
+        const match = wards.find(w => w.name.toLowerCase() === toName.toLowerCase());
+        if (match) toId = match.id;
+      }
+
+      if (!fromId || !toId) { 
+        toast.show('Please select valid Bengaluru wards from the suggestions', 'warning'); 
+        return; 
+      }
 
       dom.setText(checkBtn, 'Analyzing...');
       checkBtn.disabled = true;
