@@ -69,11 +69,13 @@
     <!-- ── Top-left: Wordmark + Search ────────────────── -->
     <div class="hud hud-topleft-container" id="hud-top-left">
       <div class="hud-brand-panel" id="hud-brand">
-        <div class="brand-info">
-          <span class="brand-name">NeighborHealth</span>
-          <span class="brand-status" id="update-time">Loading...</span>
-          <span id="sim-badge" class="sim-badge hidden"></span>
-        </div>
+        <a href="Dashboard.html" style="text-decoration: none; color: inherit; display: block;" title="Go to City Intelligence Dashboard">
+          <div class="brand-info">
+            <span class="brand-name">NeighborHealth</span>
+            <span class="brand-status" id="update-time">Loading...</span>
+            <span id="sim-badge" class="sim-badge hidden"></span>
+          </div>
+        </a>
       </div>
 
       <!-- Search bar -->
@@ -89,8 +91,17 @@
       </div>
     </div>
 
-    <!-- ── Top-right: Profile Pill ────────────────────── -->
-    <div class="hud hud-topright" id="hud-profile-container">
+    <!-- ── Top-right: Profile Pill & Dashboard Link ────────────────────── -->
+    <div class="hud hud-topright" id="hud-profile-container" style="display: flex; align-items: center; gap: 8px;">
+      <a href="Dashboard.html" class="btn-dashboard-nav" id="btn-dashboard-nav" title="City Intelligence Dashboard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: -2px;">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>Dashboard</span>
+      </a>
       <button class="profile-pill hidden" id="profile-btn">
         <div class="profile-avatar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

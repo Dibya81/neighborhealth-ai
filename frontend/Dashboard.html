@@ -1608,28 +1608,32 @@
 
     <!-- Mobile Navigation Drawer -->
     <div class="nav-mobile-drawer" id="nav-drawer">
+        <a href="index.html"  onclick="closeDrawer()" style="color: var(--teal); font-weight: 600;">🗺️ Live Map</a>
+        <a href="ml.html"     onclick="closeDrawer()">🔬 ML Intelligence</a>
         <a href="#problem"    onclick="closeDrawer()">Problem</a>
         <a href="#solution"   onclick="closeDrawer()">Solution</a>
         <a href="#howitworks" onclick="closeDrawer()">How It Works</a>
         <a href="#live"       onclick="closeDrawer()">Live System</a>
         <a href="#ai"         onclick="closeDrawer()">AI Engine</a>
-        <a href="login.html"  class="nav-cta-mobile">🚀 Launch App</a>
+        <a href="index.html"  class="nav-cta-mobile">🚀 Open Live Map</a>
     </div>
 
     <!-- NAV -->
     <nav>
-        <div class="nav-logo">
+        <div class="nav-logo" onclick="window.location.href='Dashboard.html'" style="cursor: pointer;">
             <div class="nav-dot"></div>
             NeighborHealth
         </div>
         <div class="nav-links">
+            <a href="index.html" style="color: var(--teal); font-weight: 600;">🗺️ Live Map</a>
+            <a href="ml.html">ML Intelligence</a>
             <a href="#problem">Problem</a>
             <a href="#solution">Solution</a>
             <a href="#howitworks">How It Works</a>
             <a href="#live">Live System</a>
             <a href="#ai">AI Engine</a>
         </div>
-        <button class="nav-cta" onclick="window.location.href='login.html'">Launch App</button>
+        <button class="nav-cta" onclick="window.location.href='index.html'">Open Live Map</button>
         <!-- Hamburger for mobile -->
         <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu" onclick="toggleDrawer()">
             <span></span><span></span><span></span>
