@@ -1,0 +1,32 @@
+# Keep the build context small: none of this is needed inside the images.
+.git
+.venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+node_modules
+apps/web/.next
+apps/web/node_modules
+
+# Data that is rebuilt or seeded separately (see apps/api/docker-entrypoint.sh)
+data/v2/raw
+data/v2/cache
+data/v2/models
+data/v2/guidelines
+data/v2/forecasts
+data/v2/uploads
+data/v2/app.db*
+data/v2/outbox.log
+
+# v1 code and its synthetic data
+backend
+!backend/data/processed/bbmp_198_wards_demographics.csv
+!backend/data/raw/nasa_power_bengaluru_daily_2015_2024.json
+frontend
+!frontend/assets/bengaluru-wards.geojson
+docs
+*.pdf
+.env
+.env.*
+!.env.example

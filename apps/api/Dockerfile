@@ -16,9 +16,14 @@ COPY frontend/assets/bengaluru-wards.geojson ./frontend/assets/bengaluru-wards.g
 COPY backend/data/processed/bbmp_198_wards_demographics.csv ./backend/data/processed/bbmp_198_wards_demographics.csv
 COPY backend/data/raw/nasa_power_bengaluru_daily_2015_2024.json ./backend/data/raw/nasa_power_bengaluru_daily_2015_2024.json
 
-RUN useradd -m app && mkdir -p /repo/data/v2 && chown -R app /repo/data
+# Real processed data (weekly series, weather) used to seed an empty data volume on first start.
+COPY data/v2/processed /repo/seed/v2/processed
+COPY data/v2/interim/extracted_rule.jsonl /repo/seed/v2/interim/extracted_rule.jsonl
+
+RUN useradd -m app && mkdir -p /repo/data/v2 && chown -R app /repo/data && chmod +x /repo/apps/api/docker-entrypoint.sh
 USER app
 WORKDIR /repo/apps/api
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s CMD curl -fs http://localhost:8000/health || exit 1
+ENTRYPOINT ["/repo/apps/api/docker-entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--proxy-headers"]
