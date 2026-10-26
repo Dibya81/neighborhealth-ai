@@ -15,10 +15,10 @@ function _resolveApiBaseUrl() {
 
 window.NH_CONFIG = {
   API_BASE_URL: _resolveApiBaseUrl(),
-  MAP_DARK_URL: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  MAP_DARK_URL: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 
   MAP_SATELLITE_URL: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-  MAP_ATTRIBUTION: '© OpenStreetMap contributors, © CARTO / Esri',
+  MAP_ATTRIBUTION: '© OpenStreetMap contributors, © Esri',
   BENGALURU_CENTER: [12.9716, 77.5946],
   BENGALURU_ZOOM: 11,
   BENGALURU_MIN_ZOOM: 10,

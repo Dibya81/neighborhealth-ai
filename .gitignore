@@ -150,6 +150,7 @@ data/v2/interim/*
 apps/web/node_modules/
 apps/web/.next/
 apps/web/public/data/
+!apps/web/public/data/wards.geojson
 apps/api/.env
 apps/web/.env.local
 apps/api/tests/.test.db

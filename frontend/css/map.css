@@ -1,6 +1,6 @@
 /* Leaflet overrides for dark map */
 .leaflet-container { background: #0a0a0c; }
-.leaflet-tile-pane { filter: brightness(0.85) saturate(0.8); }
+.leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(90%); }
 .leaflet-control-zoom, .leaflet-control-attribution { display: none !important; }
 
 /* Ward tooltip */

@@ -1,0 +1,13 @@
+{
+  "name": "neighborhealth",
+  "version": "2.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "build": "npm run build --prefix apps/web",
+    "dev": "npm run dev --prefix apps/web",
+    "start": "npm run start --prefix apps/web"
+  }
+}

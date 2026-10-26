@@ -1,6 +1,10 @@
 import useSWR, { SWRConfiguration } from "swr";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
+  (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
+    ? "https://neighborhealth-backend.onrender.com"
+    : "http://localhost:8000");
 const TOKEN_KEY = "nh.token";
 
 export function getToken(): string | null {
