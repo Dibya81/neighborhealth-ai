@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PYTHONPATH=/repo:/repo/apps/api
 RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /repo
@@ -20,7 +20,8 @@ COPY backend/data/raw/nasa_power_bengaluru_daily_2015_2024.json ./backend/data/r
 COPY data/v2/processed /repo/seed/v2/processed
 COPY data/v2/interim/extracted_rule.jsonl /repo/seed/v2/interim/extracted_rule.jsonl
 
-RUN useradd -m app && mkdir -p /repo/data/v2 && chown -R app /repo/data && chmod +x /repo/apps/api/docker-entrypoint.sh
+RUN useradd -m app && mkdir -p /repo/data/v2 /repo/docs/v2 && chown -R app /repo/data /repo/docs \
+    && chmod -R a+rX /repo && chmod +x /repo/apps/api/docker-entrypoint.sh   # host files may be owner-only readable
 USER app
 WORKDIR /repo/apps/api
 EXPOSE 8000

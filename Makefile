@@ -10,15 +10,15 @@ setup:            ## install Python + web dependencies
 	cp -n apps/api/.env.example apps/api/.env || true
 	cp -n apps/web/.env.example apps/web/.env.local || true
 
-data:             ## Step 1: download bulletins + weather, extract, build weekly series
-	$(PY) -m pipeline download --start 2022-01-01
+data:             ## Step 1: download bulletins + weather, extract, build the real weekly series
+	$(PY) -m pipeline download --start 2021-09-01 --end 2024-12-31   # the archive has nothing outside 2021-09-29..2024-11-04
 	$(PY) -m pipeline fetch-weather --start 2025-01-01
-	$(PY) -m pipeline extract --llm
+	$(PY) -m pipeline extract          # add --llm if OPENROUTER_API_KEY is set; scans need macOS OCR
 	$(PY) -m pipeline build
 
 weekly:           ## The weekly loop: fresh data -> retrain/backtest -> promote -> publish -> alerts
 	cd apps/api && $(PY) -m app.cli export-reports
-	$(PY) -m ml weekly
+	$(PY) -m ml weekly --no-download
 	cd apps/api && $(PY) -m app.cli run-alerts
 
 guidelines:       ## Step 6: download + index official guidelines for the assistant
