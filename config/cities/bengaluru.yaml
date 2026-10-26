@@ -1,0 +1,74 @@
+# City configuration for NeighborHealth 2.0.
+# Everything city-specific lives here so the pipeline can be pointed at another city
+# by adding a new YAML file instead of changing code.
+
+city:
+  id: bengaluru
+  name: Bengaluru
+  state: Karnataka
+  lat: 12.9716
+  lon: 77.5946
+  timezone: Asia/Kolkata
+
+surveillance:
+  # Karnataka NVBDCP "Daily Report of Dengue in Karnataka State" bulletins,
+  # archived by ICTS Bengaluru. Resolution: district level (BBMP is its own row).
+  source: icts_karnataka_bulletins
+  base_url: "https://extranet.icts.res.in/Dengue/Data-repository/PDF"
+  # The forecasting target area (the row we model). Names below are matched case-insensitively.
+  target_area: BBMP
+  area_aliases:
+    BBMP: ["bbmp", "bangaluru city", "bengaluru city", "bangalore city", "bruhat bengaluru"]
+    Bengaluru Urban: ["bangaluru (u)", "bengaluru (u)", "bangalore (u)", "bengaluru urban", "bangalore urban"]
+    Bengaluru Rural: ["bangaluru (r)", "bengaluru (r)", "bangalore (r)", "bengaluru rural", "bangalore rural"]
+  # Areas we keep in the processed tables (others are still stored in the raw extraction).
+  keep_areas: ["BBMP", "Bengaluru Urban", "Bengaluru Rural", "STATE_TOTAL"]
+
+weather:
+  source: nasa_power
+  # Raw NASA POWER JSON from v1 (2015-2024), plus newer files fetched into data/v2/raw/weather/.
+  raw_json: backend/data/raw/nasa_power_bengaluru_daily_2015_2024.json
+
+geography:
+  wards_geojson: frontend/assets/bengaluru-wards.geojson     # 243 wards (2023 delimitation)
+  ward_demographics_csv: backend/data/processed/bbmp_198_wards_demographics.csv  # 198 wards (Census 2011)
+  # NOTE: the two files use different ward systems. Step 2 builds a crosswalk before any ward-level estimate.
+
+  ward_id_key: KGISWardNo
+  ward_name_key: KGISWardName
+  # Rough city bounding box [min_lon, min_lat, max_lon, max_lat]; reports outside it are rejected.
+  bbox: [77.37, 12.80, 77.84, 13.15]
+
+languages: [en, kn, hi]
+
+reports:
+  max_per_user_per_day: 10
+  duplicate_radius_m: 50
+  duplicate_window_days: 14
+  hotspot_eps_m: 250
+  hotspot_min_reports: 3
+  hotspot_window_days: 28
+
+alerts:
+  default_threshold_band: high      # notify when a subscribed area reaches this band or above
+  horizons: [1, 2]                  # look this many weeks ahead
+  max_alerts_per_user_per_week: 2   # alert-fatigue cap
+  max_forecast_age_days: 21         # never alert from a forecast whose data is older than this
+  default_quiet_hours: ["21:00", "08:00"]
+
+routing:
+  depot_name: BBMP Health Office
+  speed_kmph: 18
+  road_detour_factor: 1.4
+  service_minutes: 15
+  shift_minutes: 360
+
+assistant:
+  # Official sources only. Download them with apps/api/scripts/fetch_guidelines.py, check each link still works.
+  sources_file: config/guideline_sources.yaml
+  helplines:
+    emergency: "108"
+    health_helpline: "104"
+
+paths:
+  data_root: data/v2

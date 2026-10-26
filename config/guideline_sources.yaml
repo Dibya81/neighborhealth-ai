@@ -1,0 +1,52 @@
+# Official documents the health assistant is allowed to answer from.
+# URLs move often: if a download fails, find the current link on the organisation's site and update it here.
+# You can also drop PDFs/TXT files manually into data/v2/guidelines/ and add an entry with `file:`.
+sources:
+  - id: who-dengue-factsheet
+    title: "Dengue and severe dengue: fact sheet"
+    org: World Health Organization
+    url: https://www.who.int/news-room/fact-sheets/detail/dengue-and-severe-dengue
+    kind: html
+  - id: who-dengue-2009
+    title: "Dengue: guidelines for diagnosis, treatment, prevention and control (2009)"
+    org: World Health Organization
+    # IRIS serves a JavaScript shell to scripts for the usual /bitstream/handle/... link, so this is the
+    # DSpace REST content link for the English PDF (resolved from handle 10665/44188).
+    url: https://iris.who.int/server/api/core/bitstreams/b1db05d8-0e97-469e-b529-464dca6de540/content
+    kind: pdf
+  - id: ncvbdc-what-is-dengue
+    title: "What is dengue"
+    org: NCVBDC, Ministry of Health & Family Welfare, India
+    url: https://ncvbdc.mohfw.gov.in/index4.php?lang=1&level=0&linkid=535&lid=3710
+    kind: html
+  - id: ncvbdc-signs-symptoms
+    title: "Signs and symptoms of dengue fever"
+    org: NCVBDC, Ministry of Health & Family Welfare, India
+    url: https://ncvbdc.mohfw.gov.in/index4.php?lang=1&level=0&linkid=436&lid=3711
+    kind: html
+  - id: ncvbdc-transmission
+    title: "Transmission cycle of dengue"
+    org: NCVBDC, Ministry of Health & Family Welfare, India
+    url: https://ncvbdc.mohfw.gov.in/index4.php?lang=1&level=0&linkid=438&lid=3713
+    kind: html
+  - id: ncvbdc-vector
+    title: "Vector of dengue fever"
+    org: NCVBDC, Ministry of Health & Family Welfare, India
+    url: https://ncvbdc.mohfw.gov.in/index4.php?lang=1&level=0&linkid=449&lid=3719
+    kind: html
+  - id: ncvbdc-case-management
+    title: "Management of dengue case"
+    org: NCVBDC, Ministry of Health & Family Welfare, India
+    url: https://ncvbdc.mohfw.gov.in/index4.php?lang=1&level=0&linkid=446&lid=3723
+    kind: html
+  - id: ncvbdc-faq
+    title: "Dengue and chikungunya: frequently asked questions"
+    org: NCVBDC, Ministry of Health & Family Welfare, India
+    url: https://ncvbdc.mohfw.gov.in/WriteReadData/l892s/52545681531535010918.pdf
+    kind: pdf
+  - id: ncvbdc-clinical-management
+    title: "National Guidelines for Clinical Management of Dengue Fever (2023)"
+    org: NCVBDC, Ministry of Health & Family Welfare, India
+    url: "https://ncvbdc.mohfw.gov.in/Doc/National%20Guidelines%20for%20Clinical%20Management%20of%20Dengue%20Fever%202023.pdf"
+    kind: pdf
+    note: "2023 edition, linked from the NCVBDC 'Management of dengue case' page; it replaces the 2014 edition."

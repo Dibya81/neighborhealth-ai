@@ -1,0 +1,23 @@
+{
+  "area": "BBMP",
+  "value": "cum_total_pos",
+  "n_rows": 552,
+  "n_removed_outliers": 5,
+  "year_end_gap_days": {
+    "2021": -14,
+    "2022": -11,
+    "2023": -11,
+    "2024": 57
+  },
+  "n_weeks": 162,
+  "weeks_ok": 113,
+  "start": "2021-10-10",
+  "end": "2024-11-10",
+  "total_cases": 26491.8,
+  "tests_series": {
+    "n_weeks": 162,
+    "weeks_ok": 113
+  },
+  "weather_weeks": 618,
+  "weather_end": "2026-11-01"
+}

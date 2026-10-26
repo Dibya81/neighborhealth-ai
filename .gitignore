@@ -128,3 +128,31 @@ test-results/
 Pipfile
 Pipfile.lock
 poetry.lock
+
+# pipeline/build/ is source code (reconcile, series, weather), not a build output: the generic build/ rule above must not hide it
+!pipeline/build/
+# the macOS 'Icon?' rule above also matches the PWA's icons/ folder
+!apps/web/public/icons/
+
+# NeighborHealth 2.0 data (raw PDFs, caches and intermediate files are rebuilt by the pipeline)
+data/v2/raw/
+data/v2/cache/
+data/v2/interim/*
+# the real extracted dataset is kept in git: OCR of scans needs macOS, so other machines reuse this result
+!data/v2/interim/extracted_rule.jsonl
+.venv/
+
+# NeighborHealth 2.0 app
+apps/web/node_modules/
+apps/web/.next/
+apps/web/public/data/
+apps/api/.env
+apps/web/.env.local
+apps/api/tests/.test.db
+data/v2/app.db*
+data/v2/uploads/
+data/v2/models/
+data/v2/forecasts/
+data/v2/processed/backtest_predictions.csv
+data/v2/outbox.log
+data/v2/guidelines/
