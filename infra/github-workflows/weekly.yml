@@ -1,0 +1,35 @@
+name: Weekly forecast
+
+# Every Monday 06:30 IST: fetch new bulletins, backtest, maybe promote, publish, and upload the bundle.
+# Needs repository secret OPENROUTER_API_KEY (for the LLM extractor). The data directory is cached
+# between runs so downloads are incremental.
+# The weekly schedule is OFF on purpose: the ICTS archive stopped at 2024-11-04, so a scheduled run would
+# republish a forecast built from the same old data. Re-enable the cron below once a live source exists.
+on:
+  # schedule: [{ cron: "0 1 * * 1" }]
+  workflow_dispatch:
+
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11", cache: pip }
+      - run: pip install -r requirements-pipeline.txt scikit-learn scipy lightgbm statsmodels
+      - uses: actions/cache@v4
+        with:
+          path: data/v2
+          key: nh-data-${{ github.run_id }}
+          restore-keys: nh-data-
+      - run: python -m ml weekly
+      - run: python -m ml gate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forecast-bundle
+          path: |
+            data/v2/forecasts/latest.json
+            docs/v2/MODEL_CARD.md

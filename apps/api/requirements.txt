@@ -1,0 +1,33 @@
+-r ../../requirements-pipeline.txt
+
+# API
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+pyjwt>=2.8
+bcrypt>=4.1
+email-validator>=2.1
+prometheus-client>=0.20
+
+# Database (SQLite works out of the box for development; Postgres + PostGIS in docker)
+psycopg[binary]>=3.1
+psycopg-pool>=3.2
+
+# Queue for alerts (optional in development: an in-memory queue is used if REDIS_URL is unset)
+redis>=5.0
+
+# ML / forecasting
+scikit-learn>=1.4
+scipy>=1.11
+lightgbm>=4.3
+statsmodels>=0.14
+mlflow>=2.12        # optional: only used when MLFLOW_TRACKING_URI is set
+
+# Citizen reports
+pillow>=10.0
+# Vision check (optional, ~600 MB with torch). Without it, every report goes to human review.
+# transformers>=4.40
+# torch>=2.2
+
+# Routing (optional: a built-in heuristic is used when OR-Tools is missing)
+ortools>=9.9
