@@ -6,6 +6,7 @@ from pydantic import BaseModel, EmailStr, Field
 from app import db
 from app.ratelimit import limit
 from app.security import create_token, current_user, hash_password, verify_password
+from app.services import privacy
 from app.services.pilot import record_consent
 
 router = APIRouter(prefix="/v2/auth", tags=["auth"])
@@ -70,3 +71,22 @@ def update_me(body: MeUpdate, user: dict = Depends(current_user)):
     if changes:
         db.update("users", user["id"], changes)
     return _out({**user, **changes})
+
+
+class DeleteIn(BaseModel):
+    password: str
+
+
+@router.get("/me/export")
+def export_me(user: dict = Depends(current_user)):
+    """Everything we hold about you, as JSON."""
+    return privacy.export_user_data(user["id"])
+
+
+@router.delete("/me", dependencies=[Depends(limit("delete_me", 3, 3600))])
+def delete_me(body: DeleteIn, user: dict = Depends(current_user)):
+    """Permanently delete your account and data. Asks for the password again so a stolen session cannot do it."""
+    row = db.fetchone("SELECT password_hash FROM users WHERE id = ?", (user["id"],))
+    if not row or not verify_password(body.password, row["password_hash"]):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Wrong password")
+    return {"deleted": True, "removed": privacy.delete_user_data(user["id"])}

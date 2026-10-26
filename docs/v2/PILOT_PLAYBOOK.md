@@ -20,7 +20,7 @@ conversation with a BBMP health officer or public-health professor.** Even "200 
 - [ ] Guidelines downloaded and indexed (`make guidelines`); ask 20 test questions, check every citation by hand.
 - [ ] Alerts tested in dry-run (`ALERTS_DRY_RUN=true`, see `data/v2/outbox.log`), then with your own phone.
 - [ ] At least one official account created (`make officials EMAIL=... PASSWORD=...`).
-- [ ] Privacy notice and terms page written in plain language (who sees what, how to delete your data).
+- [ ] Privacy notice and terms: drafts are in `docs/v2/legal/`; fill the ▢ blanks, get them reviewed, and publish them in the web app.
 - [ ] If you publish results, check with your college whether ethics/IRB approval is needed for user research.
 
 ## Week by week
@@ -70,5 +70,9 @@ conversation with a BBMP health officer or public-health professor.** Even "200 
 - One quote from a resident and one from an official (with permission)
 
 ## Data deletion
-On request, delete a user's rows from `users`, `subscriptions`, `alerts`, `reports` (and photos in
-`data/v2/uploads/reports/`), `events`, `consents`, `chat_logs`. Keep an anonymous count for metrics only.
+Users can delete their own account (`DELETE /v2/auth/me`, asks for their password) and download their data
+(`GET /v2/auth/me/export`). This removes the account, reports and photo files, saved places, alerts, consents,
+assistant questions and usage events; field tasks already opened stay but are unlinked from the person
+(see `app/services/privacy.py`). If someone asks by message instead, ask them to do it in the app, or use
+`python -c "from app.services.privacy import delete_user_data; ..."` from `apps/api` after verifying who they are.
+Privacy notice and terms drafts: `docs/v2/legal/` (fill the ▢ blanks first).
