@@ -61,6 +61,20 @@ def build_feature_matrix(
     return df
 
 
+def get_same_day_prev_year(d: date) -> date:
+    """
+    Returns the corresponding date in the previous year.
+    Safely handles leap-day: if date is Feb 29 (leap year),
+    the previous non-leap year resolves to Feb 28.
+    Works seamlessly across all year boundaries (Dec 31, Jan 1, Feb 28, Feb 29, March 1).
+    """
+    try:
+        return d.replace(year=d.year - 1)
+    except ValueError:
+        # Leap day Feb 29 -> Feb 28 in preceding non-leap year
+        return d.replace(year=d.year - 1, day=28)
+
+
 def get_historical_scores_from_db(ward_ids: list[str]) -> dict[str, dict]:
     from db.client import get_supabase
     sb  = get_supabase()
@@ -78,14 +92,19 @@ def get_historical_scores_from_db(ward_ids: list[str]) -> dict[str, dict]:
         wid = row["ward_id"]
         cases_30d[wid] = cases_30d.get(wid, 0) + (row["dengue_cases"] or 0)
 
+    # Safe leap-year calculation
+    prev_year_end = get_same_day_prev_year(tod)
+    prev_year_start = prev_year_end.replace(day=1)
+
     r_prev = (
         sb.table("ward_risk_scores")
         .select("ward_id, dengue_cases")
         .eq("disease_id", "dengue")
-        .gte("score_date", tod.replace(year=tod.year - 1, day=1).isoformat())
-        .lte("score_date", tod.replace(year=tod.year - 1).isoformat())
+        .gte("score_date", prev_year_start.isoformat())
+        .lte("score_date", prev_year_end.isoformat())
         .execute()
     )
+
     cases_prev: dict[str, int] = {}
     for row in r_prev.data:
         wid = row["ward_id"]

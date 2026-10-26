@@ -1,5 +1,5 @@
 export const nf = (n: number | null | undefined, digits = 0) =>
-  n == null || Number.isNaN(n) ? "–" : n.toLocaleString("en-IN", { maximumFractionDigits: digits, minimumFractionDigits: digits });
+  n == null || Number.isNaN(n) ? "n/a" : n.toLocaleString("en-IN", { maximumFractionDigits: digits, minimumFractionDigits: digits });
 
 export function weekLabel(iso: string, lang = "en") {
   const d = new Date(iso + "T00:00:00");
@@ -7,7 +7,7 @@ export function weekLabel(iso: string, lang = "en") {
   start.setDate(d.getDate() - 6);
   const locale = lang === "kn" ? "kn-IN" : lang === "hi" ? "hi-IN" : "en-IN";
   const f = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" });
-  return `${f.format(start)} – ${f.format(d)}`;
+  return `${f.format(start)} to ${f.format(d)}`;
 }
 
 export function shortDate(iso: string) {

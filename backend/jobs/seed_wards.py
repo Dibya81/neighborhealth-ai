@@ -226,6 +226,37 @@ WARDS_DATA = [
 ]
 
 
+def load_authentic_wards_data():
+    """Loads authentic 198 BBMP ward demographics from processed Census 2011 CSV."""
+    from pathlib import Path
+    import csv
+    csv_path = Path(__file__).parent.parent / "data" / "processed" / "bbmp_198_wards_demographics.csv"
+    if csv_path.exists():
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            return [
+                {
+                    "id": r["ward_id"],
+                    "name": r["ward_name"],
+                    "constituency": r["constituency"],
+                    "population": int(r["population"]),
+                    "population_density": float(r["population_density"]),
+                    "area_sqkm": float(r.get("area_sqkm", 3.5)),
+                }
+                for r in reader
+            ]
+    return [
+        {
+            "id": w[0],
+            "name": w[1],
+            "constituency": w[2],
+            "population": w[3],
+            "population_density": w[4],
+        }
+        for w in WARDS_DATA
+    ]
+
+
 def seed_wards():
     sb = get_supabase()
 
@@ -237,18 +268,8 @@ def seed_wards():
         logger.info("Wards already seeded (%d rows). Skipping.", existing_count)
         return
 
-    logger.info("Seeding %d BBMP wards...", len(WARDS_DATA))
-
-    rows = [
-        {
-            "id": w[0],
-            "name": w[1],
-            "constituency": w[2],
-            "population": w[3],
-            "population_density": w[4],
-        }
-        for w in WARDS_DATA
-    ]
+    rows = load_authentic_wards_data()
+    logger.info("Seeding %d authentic BBMP wards into database...", len(rows))
 
     # Batch in chunks of 50 to stay within Supabase request limits
     chunk_size = 50
@@ -257,8 +278,9 @@ def seed_wards():
         sb.table("wards").upsert(chunk, on_conflict="id").execute()
         logger.info("  Inserted wards %d–%d", i + 1, min(i + chunk_size, len(rows)))
 
-    logger.info("Ward seeding complete. %d wards inserted.", len(rows))
+    logger.info("Ward seeding complete. %d authentic wards inserted.", len(rows))
 
 
 if __name__ == "__main__":
     seed_wards()
+

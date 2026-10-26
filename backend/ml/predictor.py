@@ -14,9 +14,15 @@ MODEL_PATH = Path(__file__).parent / "model" / "xgb_dengue.pkl"
 @lru_cache(maxsize=1)
 def _load_dengue_model():
     if MODEL_PATH.exists():
-        import joblib
+        import pickle
+        import ml.model_def  # ensures class registration for unpickling
         logger.info("Loading Dengue ML model from %s", MODEL_PATH)
-        return joblib.load(MODEL_PATH)
+        try:
+            with open(MODEL_PATH, "rb") as f:
+                return pickle.load(f)
+        except Exception as e:
+            logger.error("Failed to load ML model from %s: %s", MODEL_PATH, e)
+            return None
     logger.warning("ML model not found at %s — rule-based fallback active.", MODEL_PATH)
     return None
 

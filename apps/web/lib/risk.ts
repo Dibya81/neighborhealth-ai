@@ -23,3 +23,6 @@ export const UNCERTAINTY_OPACITY = { low: 0.88, medium: 0.66, high: 0.42 } as co
 export function bandIndex(b: Band | null | undefined) {
   return b ? BANDS.indexOf(b) : -1;
 }
+
+// Sequential ramp for "compared with other wards" shading (light to dark teal). Not a risk level.
+export const RELATIVE_RAMP = ["#DCEEEB", "#A3D3CD", "#4FA8A1", "#0B6B68"] as const;

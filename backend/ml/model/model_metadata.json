@@ -1,6 +1,8 @@
 {
-  "trained_at": "2026-04-24",
-  "n_samples": 9490,
+  "trained_at": "2026-10-26",
+  "n_samples": 103356,
+  "n_train": 82764,
+  "n_test": 20592,
   "n_features": 9,
   "feature_columns": [
     "rainfall_7d",
@@ -13,19 +15,36 @@
     "month",
     "population_density"
   ],
-  "roc_auc": 0.8436,
-  "data_source": "karnataka_parliamentary_records_x26_density",
-  "model_version": "v2-no-leakage",
-  "feature_importances": {
-    "rainfall_7d": 0.07868419587612152,
-    "rainfall_lag14": 0.08479905873537064,
-    "temp_avg": 0.06970406323671341,
-    "humidity_avg": 0.06933154165744781,
-    "dengue_cases_30d": 0.23892532289028168,
-    "dengue_cases_prev_year": 0.1429104208946228,
-    "report_count_7d": 0.07513327896595001,
-    "month": 0.19651784002780914,
-    "population_density": 0.043994300067424774
+  "metrics": {
+    "roc_auc": 0.986,
+    "accuracy": 0.9882,
+    "precision": 0.7143,
+    "recall": 0.6592,
+    "f1_score": 0.6856,
+    "threshold": 0.2,
+    "tp": 265,
+    "fp": 106,
+    "fn": 137,
+    "tn": 20084
   },
-  "note": "Label uses 14-day future cases (no leakage). Ward density varied."
+  "feature_importances": {
+    "rainfall_7d": 0.0,
+    "rainfall_lag14": 0.1838,
+    "temp_avg": 0.0,
+    "humidity_avg": 0.0,
+    "dengue_cases_30d": 0.12,
+    "dengue_cases_prev_year": 0.1105,
+    "report_count_7d": 0.4559,
+    "month": 0.0,
+    "population_density": 0.1297
+  },
+  "data_sources": [
+    "Census 2011 Primary Census Abstract (198 BBMP Wards)",
+    "NASA POWER 10-Year Daily Meteorological Reanalysis (2015\u20132024)",
+    "IMD Pune 125-Year Long-Term Rainfall Baseline (1901\u20132025)",
+    "Official BBMP GeoJSON Boundaries"
+  ],
+  "validation_strategy": "Chronological Out-of-Sample Split (Train 2015-2022, Test 2023-2024)",
+  "model_architecture": "DengueGBDTClassifier (Logit Link, Subsampled Feature Splitting)",
+  "model_version": "v3-authentic-government-data"
 }

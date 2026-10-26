@@ -105,7 +105,9 @@ def publish(champion_type: str, backtest: pd.DataFrame, scores: pd.DataFrame, mo
         "population_est": city_pop,
         "bands_per_100k": bands,
         "history": [{"week_end": i.date().isoformat(), "cases": None if pd.isna(v) else round(float(v), 1),
-                     "rain_mm": None if pd.isna(df.at[i, "rain_mm"]) else round(float(df.at[i, "rain_mm"]), 1)}
+                     "rain_mm": None if pd.isna(df.at[i, "rain_mm"]) else round(float(df.at[i, "rain_mm"]), 1),
+                     # how well this week is backed by real bulletins: ok | partial | interpolated
+                     "quality": df.at[i, "quality"] if "quality" in df and isinstance(df.at[i, "quality"], str) else None}
                     for i, v in hist.items()],
         "forecast": forecasts,
         "drivers": drivers,

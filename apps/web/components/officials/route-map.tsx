@@ -15,7 +15,7 @@ export interface RoutePlan {
   naive_single_route_minutes: number;
 }
 
-export const TEAM_COLORS = ["#0E7C7B", "#E06A2C", "#5B4BDB", "#9E2338", "#2E7D32", "#B7791F"];
+export const TEAM_COLORS = ["#0B6B68", "#C2561F", "#4F46B8", "#9E2338", "#2E7D32", "#8A6414"];
 
 export default function RouteMap({ plan, tasks }: { plan: RoutePlan | null; tasks: { id: string; lat: number; lon: number }[] }) {
   const { resolvedTheme } = useTheme();
@@ -31,7 +31,7 @@ export default function RouteMap({ plan, tasks }: { plan: RoutePlan | null; task
   return (
     <MapGL initialViewState={{ latitude: center.lat, longitude: center.lon, zoom: 11 }}
       mapStyle={resolvedTheme === "dark" ? "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json" : "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"}
-      attributionControl={{ compact: true }} style={{ width: "100%", height: "100%" }}>
+      attributionControl={true} style={{ width: "100%", height: "100%" }}>
       <NavigationControl position="bottom-right" showCompass={false} />
       <Source id="routes" type="geojson" data={lines}>
         <Layer id="route-lines" type="line" paint={{ "line-color": ["get", "color"], "line-width": 3, "line-opacity": 0.85 }} layout={{ "line-join": "round", "line-cap": "round" }} />

@@ -35,6 +35,14 @@ window.api = {
     return apiClient.post('/api/v1/reports', payload);
   },
 
+  /** POST /api/v1/reports/upload-photo */
+  async uploadReportPhoto(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.post('/api/v1/reports/upload-photo', formData);
+  },
+
+
   /** POST /api/v1/subscriptions */
   async createSubscription(payload) {
     // payload: { ward_id, contact, contact_type, threshold?, user_id?, name?, email?, notify_diseases? }

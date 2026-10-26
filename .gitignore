@@ -131,6 +131,10 @@ poetry.lock
 
 # pipeline/build/ is source code (reconcile, series, weather), not a build output: the generic build/ rule above must not hide it
 !pipeline/build/
+# the web app's lockfile keeps CI and Docker builds reproducible (the generic package-lock.json rule above would hide it)
+!apps/web/package-lock.json
+*.tsbuildinfo
+
 # the macOS 'Icon?' rule above also matches the PWA's icons/ folder
 !apps/web/public/icons/
 

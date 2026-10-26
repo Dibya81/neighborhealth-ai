@@ -8,11 +8,19 @@ const config: Config = {
       colors: {
         paper: "rgb(var(--paper) / <alpha-value>)",
         surface: "rgb(var(--surface) / <alpha-value>)",
+        sunken: "rgb(var(--sunken) / <alpha-value>)",
         ink: "rgb(var(--ink) / <alpha-value>)",
         muted: "rgb(var(--muted) / <alpha-value>)",
         line: "rgb(var(--line) / <alpha-value>)",
+        "line-strong": "rgb(var(--line-strong) / <alpha-value>)",
         lake: "rgb(var(--lake) / <alpha-value>)",
         "lake-soft": "rgb(var(--lake-soft) / <alpha-value>)",
+        warn: {
+          bg: "rgb(var(--warn-bg) / <alpha-value>)",
+          line: "rgb(var(--warn-line) / <alpha-value>)",
+          ink: "rgb(var(--warn-ink) / <alpha-value>)",
+        },
+        // Reserved for data. Never used as decoration.
         risk: {
           low: "#DCE8D2",
           moderate: "#F2B33D",
@@ -25,21 +33,22 @@ const config: Config = {
         display: ["var(--font-plex-condensed)", "var(--font-plex)", "system-ui", "sans-serif"],
       },
       fontSize: {
-        // Modular scale (1.25), Bringhurst-style: body 16, small 13, display sizes for numbers.
         xs: ["0.8125rem", { lineHeight: "1.25rem" }],
-        sm: ["0.875rem", { lineHeight: "1.375rem" }],
-        base: ["1rem", { lineHeight: "1.625rem" }],
-        lg: ["1.25rem", { lineHeight: "1.875rem" }],
-        xl: ["1.5625rem", { lineHeight: "2.125rem" }],
-        "2xl": ["1.953rem", { lineHeight: "2.4rem" }],
-        "3xl": ["2.441rem", { lineHeight: "2.8rem" }],
-        "4xl": ["3.052rem", { lineHeight: "3.3rem" }],
+        sm: ["0.9375rem", { lineHeight: "1.5rem" }],
+        base: ["1rem", { lineHeight: "1.65rem" }],
+        lg: ["1.1875rem", { lineHeight: "1.85rem" }],
+        xl: ["1.4375rem", { lineHeight: "2rem" }],
+        "2xl": ["1.75rem", { lineHeight: "2.2rem" }],
+        "3xl": ["2.125rem", { lineHeight: "2.5rem" }],
+        "4xl": ["2.75rem", { lineHeight: "3rem" }],
+        "5xl": ["3.5rem", { lineHeight: "3.75rem" }],
       },
-      borderRadius: { sm: "6px", DEFAULT: "10px", lg: "16px", xl: "22px" },
+      // One radius system: 8px for controls, 12px for panels. Nothing else.
+      borderRadius: { sm: "6px", DEFAULT: "8px", md: "8px", lg: "12px", xl: "12px", "2xl": "12px" },
       boxShadow: {
-        float: "0 1px 2px rgb(20 33 61 / 0.06), 0 12px 32px -12px rgb(20 33 61 / 0.22)",
+        float: "0 1px 2px rgb(14 26 43 / 0.06), 0 10px 28px -12px rgb(14 26 43 / 0.22)",
       },
-      maxWidth: { prose: "68ch" },
+      maxWidth: { prose: "64ch" },
     },
   },
   plugins: [],

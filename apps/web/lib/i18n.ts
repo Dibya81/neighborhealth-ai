@@ -18,7 +18,7 @@ const en = {
   "home.useLocation": "Use my location",
   "home.thisWeek": "Expected cases next week",
   "home.range": "likely range",
-  "home.rainNote": "Rain usually leads cases by 2–8 weeks: breeding water needs time to become mosquitoes.",
+  "home.rainNote": "Rain usually leads cases by 2 to 8 weeks: standing water needs time to produce mosquitoes.",
   "home.actionsTitle": "This week, around your home",
   "home.action1": "Empty and scrub anything that holds water: buckets, coolers, plant trays, tyres.",
   "home.action2": "Cover water drums and tanks tightly.",

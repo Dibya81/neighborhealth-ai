@@ -73,7 +73,7 @@ def _get_sim_context(ward_id: str, mode: str) -> str:
     )
 
 
-def generate_ward_advisory(
+async def generate_ward_advisory(
     ward_id: str,
     user_message: str,
     language: str = "en",
@@ -175,8 +175,8 @@ def generate_ward_advisory(
         }
 
         start_time = time.time()
-        with httpx.Client(timeout=30.0) as client:
-            response = client.post(
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
                 "https://openrouter.ai/api/v1/chat/completions",
                 headers=headers,
                 json=body,
@@ -188,6 +188,7 @@ def generate_ward_advisory(
 
         logger.info("Response generated (%.1fs)", duration)
         response_text = data["choices"][0]["message"]["content"]
+
 
     except ValueError as ve:
         logger.error("Config error: %s", ve)

@@ -22,7 +22,7 @@
   IgM + NS1 = Total and Total <= Samples <= Suspected. OCR output is committed
   (`data/v2/interim/extracted_rule.jsonl`) so other machines do not need to repeat it.
 * **Gaps:** many dates have no bulletin (weekends, holidays) and Apr-May 2023 is missing entirely (7 weeks, interpolated and
-  flagged `interpolated`). Of 162 weeks, 113 have 3 or more real observations (`quality == "ok"`). Forecast
+  flagged `interpolated`). Of 161 weeks, 113 have 3 or more real observations (`quality == "ok"`). Forecast
   backtests are scored **only on those weeks**, never on interpolated values.
 * **Accuracy checks that need no hand labels:**
   * 374 of 379 text bulletins: the district rows sum exactly to the printed state total.

@@ -6,6 +6,7 @@
   <title>ML Intelligence · NeighborHealth</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="js/config.js"></script>
   <style>
     :root {
       --bg:         #f0eeff;
@@ -930,7 +931,7 @@ function makeElectricBorder(el, color) {
 
   /* API client (mirrors the main app) */
   /* Backend API Base URL */
-  var BASE = 'https://neighborhealth-backend.onrender.com';
+  var BASE = (window.NH_CONFIG && window.NH_CONFIG.API_BASE_URL) ? window.NH_CONFIG.API_BASE_URL : 'http://localhost:8001';
 
   async function apiFetch(path) {
     var r = await fetch(BASE + path);

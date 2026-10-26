@@ -72,11 +72,15 @@
       }
 
       localStorage.setItem('neighborhealth_user', JSON.stringify(user));
+      if (user.token) {
+        localStorage.setItem('neighborhealth_token', user.token);
+      }
       if (window.store) store.set('currentUser', user);
 
       // Smooth transition
       btnText.textContent = 'Verified ✓';
       spinner.classList.add('hidden');
+
 
       setTimeout(() => {
         window.location.href = 'index.html';

@@ -11,13 +11,14 @@ async def chat(payload: ChatRequest):
     """
     AI-powered ward advisory endpoint with personalization and history tracking.
     """
-    result = generate_ward_advisory(
+    result = await generate_ward_advisory(
         ward_id=payload.ward_id,
         user_message=payload.message,
         language=payload.language or "en",
         simulation_mode=payload.simulation_mode,
         user_health_conditions=payload.user_health_conditions,
     )
+
 
     # Save to history if user_id provided
     if payload.user_id:

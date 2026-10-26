@@ -111,16 +111,28 @@ window.aiAssistant = (function() {
     }, 12);
   }
 
+  function _escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
   function _formatMarkdown(text) {
     if (!text) return '';
-    return text
-      .replace(/### (.*?)\n/g, '<div class="ai-msg-h"> $1</div>')
+    const safeText = _escapeHtml(text);
+    return safeText
+      .replace(/### (.*?)(?:\n|$)/g, '<div class="ai-msg-h">$1</div>')
       .replace(/\*\* (.*?)\*\*/g, '<b>$1</b>')
       .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
       .replace(/^- (.*)/gm, '<div class="ai-msg-li">• $1</div>')
       .replace(/^(\d+)\. (.*)/gm, '<div class="ai-msg-li">$1. $2</div>')
       .replace(/\n/g, '<br>');
   }
+
 
   function _scrollToBottom() {
     messages.scrollTop = messages.scrollHeight;

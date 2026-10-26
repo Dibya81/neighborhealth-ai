@@ -135,9 +135,9 @@
 
     <!-- ── Bottom-right: FABs ────────────────────────────── -->
     <div class="hud hud-bottomright" id="hud-fabs">
-      <!-- Simulation Wrapper to anchor panel to button without breaking flex layout -->
+      <!-- Simulation Wrapper -->
       <div style="position: relative; display: flex; align-items: center; justify-content: center;">
-        <button class="fab" id="btn-simulate" title="Simulate season scenario" style="font-size:15px;">
+        <button class="fab" id="btn-simulate" title="Simulate season scenario">
           <span class="fab-label">Season Simulation</span>
           ✨
         </button>
@@ -165,25 +165,28 @@
         </svg>
       </button>
 
-      <button class="fab" id="btn-summary" title="City health summary" style="font-size:15px;">
-        <span class="fab-label">Bengaluru Summary</span>
-        📋
-      </button>
-      <div id="summary-panel" class="sim-panel hidden" style="width:210px;">
-        <div class="sim-panel-title">Health Summary</div>
-        <button class="sim-option" data-summary="past">📅&nbsp; Past 10 Days</button>
-        <button class="sim-option" data-summary="today">🔴&nbsp; Today</button>
-        <button class="sim-option" data-summary="forecast">🔮&nbsp; Next 10 Days</button>
+      <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+        <button class="fab" id="btn-summary" title="City health summary">
+          <span class="fab-label">Bengaluru Summary</span>
+          📋
+        </button>
+        <div id="summary-panel" class="sim-panel hidden" style="width:210px;">
+          <div class="sim-panel-title">Health Summary</div>
+          <button class="sim-option" data-summary="past">📅&nbsp; Past 10 Days</button>
+          <button class="sim-option" data-summary="today">🔴&nbsp; Today</button>
+          <button class="sim-option" data-summary="forecast">🔮&nbsp; Next 10 Days</button>
+        </div>
       </div>
-      <a href="ml.html" class="fab" id="btn-ml" title="ML Integration" style="font-size:15px;text-decoration:none;">
+
+      <a href="ml.html" class="fab" id="btn-ml" title="ML Intelligence" style="text-decoration:none;">
         <span class="fab-label">ML Intelligence</span>
         🧠
       </a>
-      <button class="fab" id="btn-health-check" title="AI Health Checker" style="font-size:15px; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" onclick="window.location.href='health-check/index.html'">
-        <span class="fab-label">❤️ Check Health</span>
+      <button class="fab fab-health" id="btn-health-check" title="AI Health Checker" onclick="window.location.href='health-check/index.html'">
+        <span class="fab-label">Check Health</span>
         ❤️
       </button>
-      <button class="fab" id="btn-travel" title="Travel risk checker" style="font-size:15px;" onclick="openTravelModal()">
+      <button class="fab" id="btn-travel" title="Travel Risk Checker" onclick="openTravelModal()">
         <span class="fab-label">Travel Risk Checker</span>
         🗺️
       </button>

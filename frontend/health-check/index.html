@@ -6,6 +6,8 @@
     <title>AI Health Check | Personal Analysis</title>
     <!-- Modern Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <script src="../js/config.js"></script>
+
     <style>
         :root {
             --bg-dark: #0a0c10;
@@ -555,8 +557,11 @@
         let audioChunks = [];
         let isRecording = false;
 
-        // Unified API Base
-        const API_BASE = window.location.origin.replace(':3000', ':8000') + "/api/health";
+        // Unified API Base via Centralized Config
+        const API_BASE = ((window.NH_CONFIG && window.NH_CONFIG.API_BASE_URL) 
+            ? window.NH_CONFIG.API_BASE_URL 
+            : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8000' : 'https://neighborhealth-backend.onrender.com')) + "/api/health";
+
 
         function setMode(mode) {
             currentMode = mode;

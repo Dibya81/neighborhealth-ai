@@ -64,20 +64,71 @@ app.include_router(health_router,        prefix="/api/health")
 
 @app.get("/health", tags=["system"])
 async def health_check():
+    """Basic liveness probe."""
     return JSONResponse({"status": "ok", "app": settings.app_name, "env": settings.app_env})
+
 
 @app.get("/health/db", tags=["system"])
 async def db_health_check():
+    """Readiness probe specifically for database connectivity."""
     try:
         from db.client import get_supabase
         sb = get_supabase()
-        result = sb.table("wards").select("id", count="exact").execute()
+        result = sb.table("wards").select("id", count="exact").limit(1).execute()
         count = result.count if result.count is not None else len(result.data)
         return JSONResponse({"status": "ok", "wards_in_db": count})
     except Exception as e:
         logger.error("DB health check failed: %s", e)
         return JSONResponse({"status": "error", "detail": str(e)}, status_code=503)
 
+
+@app.get("/health/detailed", tags=["system"])
+async def detailed_health_check():
+    """
+    Comprehensive subsystem health check distinguishing:
+    - Application process
+    - Database connection
+    - Dengue ML model weights
+    - Acoustic & Skin health screening models
+    - External AI API configuration
+    """
+    from pathlib import Path
+    models_dir = Path(__file__).parent / "ml" / "model"
+    health_models_dir = Path(__file__).parent / "healthcheck" / "models"
+
+    subsystems = {
+        "api": "healthy",
+        "database": "unknown",
+        "dengue_ml_model": "available" if (models_dir / "xgb_dengue.pkl").exists() else "missing",
+        "skin_dl_model": "available" if (health_models_dir / "skin_model" / "model.safetensors").exists() else "missing",
+        "cough_dl_model": "available" if (health_models_dir / "cough_model" / "model.safetensors").exists() else "missing",
+        "ai_openrouter": "configured" if bool(settings.openrouter_api_key) else "unconfigured",
+        "weather_api": "configured" if bool(settings.openweathermap_api_key) else "unconfigured",
+    }
+
+    status_code = 200
+    try:
+        from db.client import get_supabase
+        sb = get_supabase()
+        res = sb.table("wards").select("id", count="exact").limit(1).execute()
+        subsystems["database"] = "connected"
+    except Exception as e:
+        subsystems["database"] = f"unreachable: {str(e)}"
+        status_code = 503
+
+    overall_status = "operational" if status_code == 200 else "degraded"
+    return JSONResponse(
+        {
+            "status": overall_status,
+            "app": settings.app_name,
+            "environment": settings.app_env,
+            "subsystems": subsystems,
+        },
+        status_code=status_code,
+    )
+
+
 @app.on_event("startup")
 async def on_startup():
     logger.info("NeighborHealth backend starting [env=%s]", settings.app_env)
+

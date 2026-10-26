@@ -52,3 +52,17 @@ def test_reconcile_flags_disagreement():
     df = reconcile({"2024-07-08": {"rule": a, "llm": b}}, ["BBMP"], prefer="rule")
     assert "extractors_disagree" in df.iloc[0]["flags"]
     assert df.iloc[0]["cum_total_pos"] == 2083
+
+
+def test_a_week_after_the_last_real_bulletin_is_not_reported():
+    """The last Sunday after the final bulletin would carry the cumulative forward and read as ~0 cases."""
+    records, d, cum = [], date(2024, 10, 1), 1000
+    while d <= date(2024, 11, 4):                    # last bulletin on Monday 4 Nov 2024
+        cum += 10
+        if d.weekday() != 6:
+            records.append({"date": pd.Timestamp(d), "area": "BBMP", "trusted": True,
+                            "cum_total_pos": cum, "day_total_pos": 10, "cum_year": 2024})
+        d += timedelta(days=1)
+    weekly, _ = build_weekly(pd.DataFrame(records), "BBMP")
+    assert weekly["week_end"].max() == pd.Timestamp("2024-11-03")   # 10 Nov would be a week with no bulletins
+    assert (weekly["cases"] > 50).all()                              # and no spurious near-zero week

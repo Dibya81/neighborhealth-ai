@@ -1,10 +1,22 @@
-/**
- * Global configuration.
- * Change API_BASE_URL when deploying.
- */
+function _resolveApiBaseUrl() {
+  try {
+    const custom = localStorage.getItem('NH_API_BASE_URL');
+    if (custom) return custom.replace(/\/+$/, '');
+  } catch (_) {}
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') {
+    if (window.location.port === '3001') {
+      return 'http://localhost:8001';
+    }
+    return 'http://localhost:8000';
+  }
+  return 'https://neighborhealth-backend.onrender.com';
+}
+
 window.NH_CONFIG = {
-  API_BASE_URL: 'https://neighborhealth-backend.onrender.com',
+  API_BASE_URL: _resolveApiBaseUrl(),
   MAP_DARK_URL: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+
   MAP_SATELLITE_URL: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   MAP_ATTRIBUTION: '© OpenStreetMap contributors, © CARTO / Esri',
   BENGALURU_CENTER: [12.9716, 77.5946],

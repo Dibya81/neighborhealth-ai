@@ -4,7 +4,7 @@ import { AlertTriangle, ExternalLink, Phone, SendHorizontal } from "lucide-react
 import { useEffect, useRef, useState } from "react";
 
 import { useApp } from "@/components/providers";
-import { Button, PageHeader } from "@/components/ui/primitives";
+import { Button, PageHeader, Panel } from "@/components/ui/primitives";
 import { api, track } from "@/lib/api";
 import { cn, nf } from "@/lib/format";
 import type { AssistantAnswer } from "@/lib/types";
@@ -17,44 +17,62 @@ const SUGGESTIONS = {
   hi: ["गंभीर डेंगू के चेतावनी संकेत क्या हैं?", "घर में मच्छरों को पनपने से कैसे रोकें?"],
 };
 
+function Urgent({ a }: { a: AssistantAnswer }) {
+  return (
+    <div role="alert" className="rounded-lg border border-[#9E2338]/60 bg-[#9E2338]/[0.07] p-5">
+      <p className="flex items-start gap-3 text-base font-semibold text-[#9E2338] dark:text-[#F5A3B0]">
+        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />{a.urgent_message}
+      </p>
+      <a href="tel:108" className="mt-4 inline-flex h-12 items-center gap-2 rounded bg-[#9E2338] px-5 text-base font-semibold text-white transition-colors hover:bg-[#8A1E31]">
+        <Phone className="h-4 w-4" />Call 108 now
+      </a>
+      {a.nearby && a.nearby.length > 0 && (
+        <div className="mt-5">
+          <p className="text-sm font-medium">Nearest hospitals</p>
+          <ul className="mt-2 divide-y divide-[#9E2338]/20 border-y border-[#9E2338]/20 text-sm">
+            {a.nearby.map((c) => (
+              <li key={c.id} className="flex items-center justify-between gap-3 py-2.5">
+                <span className="min-w-0"><span className="block truncate font-medium">{c.name}</span><span className="num text-xs text-muted">{nf(c.distance_m / 1000, 1)} km away</span></span>
+                {c.phone && <a href={`tel:${c.phone}`} className="shrink-0 rounded border border-[#9E2338]/40 px-3 py-1.5 text-xs font-medium hover:bg-[#9E2338]/10">Call</a>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Answer({ a }: { a: AssistantAnswer }) {
   const { lang } = useApp();
   const [open, setOpen] = useState<number | null>(null);
   return (
-    <div className="space-y-3">
-      {a.urgent && a.urgent_message && (
-        <div role="alert" className="rounded border border-[#9E2338]/50 bg-[#9E2338]/[0.07] p-4">
-          <p className="flex items-start gap-2 font-medium text-[#9E2338]"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />{a.urgent_message}</p>
-          <a href="tel:108" className="mt-3 inline-flex items-center gap-2 rounded bg-[#9E2338] px-4 py-2 text-sm font-medium text-white"><Phone className="h-4 w-4" />Call 108</a>
-          {a.nearby && a.nearby.length > 0 && (
-            <ul className="mt-3 space-y-1 text-sm">
-              {a.nearby.map((c) => <li key={c.id}>{c.name} <span className="text-muted">· {nf(c.distance_m / 1000, 1)} km</span></li>)}
-            </ul>
-          )}
-        </div>
-      )}
-      <p className="whitespace-pre-line leading-relaxed" lang={lang}>{a.answer}</p>
-      {a.citations.length > 0 && (
-        <div>
-          <p className="text-xs text-muted">Sources</p>
-          <ol className="mt-1.5 space-y-1.5">
-            {a.citations.map((c) => (
-              <li key={c.n} className="text-sm">
-                <button onClick={() => { setOpen(open === c.n ? null : c.n); track("citation_opened"); }} aria-expanded={open === c.n}
-                  className="text-left text-lake underline-offset-2 hover:underline">
-                  [{c.n}] {c.org}, {c.title}{c.page > 1 ? `, p. ${c.page}` : ""}
-                </button>
-                {open === c.n && (
-                  <blockquote className="mt-1.5 border-l-2 border-line pl-3 text-xs text-muted">
-                    “{c.quote}…”
-                    {c.url && <a href={c.url} target="_blank" rel="noreferrer" className="ml-1 inline-flex items-center gap-1 text-lake">open<ExternalLink className="h-3 w-3" /></a>}
-                  </blockquote>
-                )}
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
+    <div className="space-y-4">
+      {a.urgent && a.urgent_message && <Urgent a={a} />}
+      <Panel className="p-5">
+        <p className="whitespace-pre-line text-base leading-relaxed" lang={lang}>{a.answer}</p>
+        {a.citations.length > 0 && (
+          <div className="mt-5 border-t border-line pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted">Sources</p>
+            <ol className="mt-2 space-y-2">
+              {a.citations.map((c) => (
+                <li key={c.n} className="text-sm">
+                  <button onClick={() => { setOpen(open === c.n ? null : c.n); track("citation_opened"); }} aria-expanded={open === c.n}
+                    className="text-left font-medium text-lake underline-offset-2 hover:underline">
+                    [{c.n}] {c.org}, {c.title}{c.page > 1 ? `, page ${c.page}` : ""}
+                  </button>
+                  {open === c.n && (
+                    <blockquote className="mt-2 rounded-lg bg-sunken p-3 text-xs leading-relaxed text-muted">
+                      &ldquo;{c.quote}...&rdquo;
+                      {c.url && <a href={c.url} target="_blank" rel="noreferrer" className="ml-2 inline-flex items-center gap-1 font-medium text-lake">Open the document<ExternalLink className="h-3 w-3" /></a>}
+                    </blockquote>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+      </Panel>
     </div>
   );
 }
@@ -92,36 +110,56 @@ export default function AssistantPage() {
   }, []);
 
   return (
-    <div className="mx-auto flex max-w-[820px] flex-col px-4 py-8 md:px-6 md:py-12">
+    <div className="mx-auto flex max-w-[820px] flex-col px-4 py-10 md:px-6 md:py-14">
       <PageHeader title={t("assistant.title")} lede={t("assistant.lede")} />
+
+      <div className="mb-8 flex items-start gap-3 rounded-lg border border-[#9E2338]/40 bg-[#9E2338]/[0.05] p-4 text-sm">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#9E2338] dark:text-[#F5A3B0]" aria-hidden />
+        <p className="flex-1">
+          <strong className="font-semibold">Seriously unwell?</strong> Severe stomach pain, repeated vomiting, bleeding, or trouble breathing:
+          go to a hospital now or <a href="tel:108" className="font-semibold underline underline-offset-2">call 108</a>. Do not wait for an answer here.
+        </p>
+      </div>
 
       <div className="flex-1 space-y-6" aria-live="polite">
         {msgs.length === 0 && (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {(SUGGESTIONS[lang] ?? SUGGESTIONS.en).map((s) => (
-              <button key={s} onClick={() => ask(s)} className="rounded border border-line bg-surface px-4 py-3 text-left text-sm hover:border-lake">{s}</button>
-            ))}
+          <div>
+            <h2 className="text-sm font-semibold">Common questions</h2>
+            <ul className="mt-3 divide-y divide-line border-y border-line">
+              {(SUGGESTIONS[lang] ?? SUGGESTIONS.en).map((s) => (
+                <li key={s}>
+                  <button onClick={() => ask(s)} className="flex min-h-[52px] w-full items-center justify-between gap-4 py-3 text-left text-base transition-colors hover:text-lake">
+                    {s}<SendHorizontal className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
         {msgs.map((m, i) => (
-          <div key={i} className={cn(m.role === "user" ? "ml-auto max-w-[85%] rounded-lg bg-ink px-4 py-3 text-paper" : "max-w-full")}>
+          <div key={i} className={cn(m.role === "user" ? "ml-auto w-fit max-w-[85%] rounded-lg bg-ink px-4 py-3 text-paper" : "max-w-full")}>
             {m.role === "user" && <p>{m.text}</p>}
             {m.role === "assistant" && <Answer a={m.a} />}
-            {m.role === "error" && <p className="text-sm text-[#9E2338]">{m.text}</p>}
+            {m.role === "error" && <p className="rounded-lg border border-[#9E2338]/40 bg-[#9E2338]/[0.05] p-4 text-sm text-[#9E2338] dark:text-[#F5A3B0]">{m.text}</p>}
           </div>
         ))}
-        {busy && <p className="text-sm text-muted">Checking the guidelines…</p>}
+        {busy && (
+          <Panel className="space-y-2.5 p-5" >
+            <div className="h-3 w-3/4 animate-pulse rounded bg-ink/[0.08]" /><div className="h-3 w-full animate-pulse rounded bg-ink/[0.08]" /><div className="h-3 w-1/2 animate-pulse rounded bg-ink/[0.08]" />
+            <p className="sr-only">Checking the guidelines</p>
+          </Panel>
+        )}
         <div ref={endRef} />
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); ask(q); }}
-        className="sticky bottom-20 mt-8 flex gap-2 rounded-lg border border-line bg-surface p-2 shadow-float lg:bottom-4">
+        className="sticky bottom-[calc(72px+env(safe-area-inset-bottom))] mt-8 flex gap-2 rounded-lg border border-line-strong bg-surface p-2 shadow-float lg:bottom-4">
         <label htmlFor="q" className="sr-only">{t("assistant.title")}</label>
         <input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("assistant.placeholder")} maxLength={800}
-          className="h-11 flex-1 bg-transparent px-3 text-base placeholder:text-muted/80 focus:outline-none" />
+          className="h-12 min-w-0 flex-1 bg-transparent px-3 text-base placeholder:text-muted/70 focus:outline-none" />
         <Button type="submit" size="lg" loading={busy} aria-label={t("assistant.send")}><SendHorizontal className="h-4 w-4" /></Button>
       </form>
-      <p className="mt-3 text-center text-xs text-muted">Not a doctor. For high fever, see a doctor. Emergency: 108 · Health helpline: 104</p>
+      <p className="mt-4 text-center text-xs text-muted">This is information from official guidelines, not medical advice. For a high fever, see a doctor. Health helpline: 104.</p>
     </div>
   );
 }

@@ -62,17 +62,40 @@ window.reportComponent = (function() {
     }
 
     try {
+      let photoUrl = null;
+      const photoInput = document.getElementById('photo-input');
+      if (photoInput && photoInput.files && photoInput.files[0]) {
+        const file = photoInput.files[0];
+        if (file.size > 5 * 1024 * 1024) {
+          toast.show('Photo exceeds 5MB limit. Please select a smaller photo.', 'warning');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            dom.setText(submitBtn, 'Submit report');
+          }
+          return;
+        }
+        try {
+          dom.setText(submitBtn, 'Uploading photo...');
+          const uploadRes = await api.uploadReportPhoto(file);
+          photoUrl = uploadRes.photo_url || null;
+        } catch (uploadErr) {
+          console.warn('Photo upload failed, proceeding with report submission:', uploadErr);
+        }
+      }
+
+      dom.setText(submitBtn, 'Submitting report...');
       await api.submitReport({
         ward_id:     wardId || '1',
         lat,
         lng,
         description: desc || null,
-        photo_url:   null,
+        photo_url:   photoUrl,
       });
 
       // Show confirmation
       dom.addClass(stepDets, 'hidden');
       dom.removeClass(stepConf, 'hidden');
+
       dom.setText(sheetTitle, '');
       dom.setText(sheetSub, '');
 

@@ -35,9 +35,18 @@ class InMemoryCache:
     def delete(self, key: str) -> None:
         self._store.pop(key, None)
 
+    def delete_prefix(self, prefix: str) -> int:
+        """Invalidates all cache entries whose keys start with prefix."""
+        matched = [k for k in list(self._store.keys()) if k.startswith(prefix)]
+        for k in matched:
+            self._store.pop(k, None)
+        logger.info("Cache invalidated %d entries for prefix: %s", len(matched), prefix)
+        return len(matched)
+
     def clear(self) -> None:
         self._store.clear()
         logger.info("Cache cleared")
+
 
 
 # Module-level singleton — import this anywhere

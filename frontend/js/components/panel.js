@@ -2,7 +2,7 @@
  * Ward Detail Panel — slide-in right panel.
  * Renders risk gauge, signal tiles, trend chart, action buttons.
  */
-window.panelComponent = (function() {
+window.panelComponent = (function () {
   let _trendChart = null;
   let _currentDisease = store.get('currentDisease') || 'dengue';
 
@@ -80,7 +80,7 @@ window.panelComponent = (function() {
     try {
       const inner = document.querySelector('.panel-inner');
       dom.addClass(inner, 'refreshing');
-      
+
       // ── SIMULATION OVERRIDE ──────────────────────────────
       if (window.simulationMode) {
         const scores = store.get('allRiskScores');
@@ -90,22 +90,22 @@ window.panelComponent = (function() {
           const wardList = store.get('wardList') || [];
           const wardMeta = wardList.find(w => w.id === wardId);
           const simulatedDetail = {
-            ward_id:    wardId,
-            ward_name:  wardMeta ? wardMeta.name : `Ward ${wardId}`,
+            ward_id: wardId,
+            ward_name: wardMeta ? wardMeta.name : `Ward ${wardId}`,
             risk_score: ward.simulated_score,
             risk_level: (ward.simulated_score >= 70 ? 'high' : ward.simulated_score >= 40 ? 'medium' : 'low'),
-            reasons:    ward.simulated_reasons || [],
+            reasons: ward.simulated_reasons || [],
             signals: {
-                rainfall_7d:  _simSignal(wardId, 'rain'),
-                temp_avg:     _simSignal(wardId, 'temp'),
-                humidity_avg: _simSignal(wardId, 'hum'),
-                dengue_cases: 'Simulated',
-                report_count: _simSignal(wardId, 'reports'),
+              rainfall_7d: _simSignal(wardId, 'rain'),
+              temp_avg: _simSignal(wardId, 'temp'),
+              humidity_avg: _simSignal(wardId, 'hum'),
+              dengue_cases: 'Simulated',
+              report_count: _simSignal(wardId, 'reports'),
             },
             trend: [40, 45, 50, 60, ward.simulated_score], // Mock trend
             trend_direction: 'rising'
           };
-          
+
           store.set('selectedWardDetail', simulatedDetail);
           store.set('wardHistory', []); // No history for sim yet
           _render(simulatedDetail, []);
@@ -142,7 +142,7 @@ window.panelComponent = (function() {
     const isSimulated = window.simulationMode && simWard && simWard.simulated_score != null;
 
     let activeScore = isSimulated ? simWard.simulated_score : detail.risk_score;
-    let activeLevel = isSimulated 
+    let activeLevel = isSimulated
       ? (activeScore >= 70 ? 'high' : (activeScore >= 40 ? 'medium' : 'low'))
       : detail.risk_level;
 
@@ -164,7 +164,7 @@ window.panelComponent = (function() {
     // Signal tiles
     const sig = detail.signals || {};
     const diseaseCfg = diseases.find(d => d.id === _currentDisease) || diseases[0];
-    
+
     // Update labels based on disease
     const labels = {
       rainfall_7d: 'Rainfall 7d',
@@ -271,11 +271,11 @@ window.panelComponent = (function() {
     if (!history || history.length === 0) return;
 
     const labels = history.map(h => helpers.formatDate(h.date));
-    const data   = history.map(h => Math.round(h.risk_score));
+    const data = history.map(h => Math.round(h.risk_score));
 
     // Determine line colour from latest score
     const latest = data[data.length - 1] || 50;
-    const level  = helpers.scoreToLevel(latest);
+    const level = helpers.scoreToLevel(latest);
     const colour = helpers.levelToColor(level);
 
     _trendChart = new Chart(canvas, {
@@ -297,15 +297,17 @@ window.panelComponent = (function() {
         responsive: true,
         maintainAspectRatio: false,
         animation: { duration: 600, easing: 'easeOutQuart' },
-        plugins: { legend: { display: false }, tooltip: {
-          callbacks: { label: ctx => `Risk: ${ctx.raw}` },
-          displayColors: false,
-          backgroundColor: '#0E0E10',
-          borderColor: 'rgba(255,255,255,0.1)',
-          borderWidth: 1,
-          titleFont: { size: 11 },
-          bodyFont: { size: 11 },
-        }},
+        plugins: {
+          legend: { display: false }, tooltip: {
+            callbacks: { label: ctx => `Risk: ${ctx.raw}` },
+            displayColors: false,
+            backgroundColor: '#0E0E10',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            titleFont: { size: 11 },
+            bodyFont: { size: 11 },
+          }
+        },
         scales: {
           x: { display: false },
           y: {
@@ -338,10 +340,10 @@ window.panelComponent = (function() {
 
   function _simSignal(wardId, type) {
     const id = parseInt(wardId, 10) || 1;
-    const seed = (id * 6271 + {'rain':1,'temp':2,'hum':3,'reports':4}[type]) % 100;
-    if (type === 'rain')    return +(8 + seed * 0.3).toFixed(1);
-    if (type === 'temp')    return +(22 + (seed % 10)).toFixed(1);
-    if (type === 'hum')     return +(60 + (seed % 25)).toFixed(1);
+    const seed = (id * 6271 + { 'rain': 1, 'temp': 2, 'hum': 3, 'reports': 4 }[type]) % 100;
+    if (type === 'rain') return +(8 + seed * 0.3).toFixed(1);
+    if (type === 'temp') return +(22 + (seed % 10)).toFixed(1);
+    if (type === 'hum') return +(60 + (seed % 25)).toFixed(1);
     if (type === 'reports') return Math.floor(seed % 6);
     return 0;
   }

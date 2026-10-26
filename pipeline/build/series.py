@@ -88,6 +88,9 @@ def build_weekly(rows: pd.DataFrame, area: str = "BBMP", value_col: str = "cum_t
         "n_obs": n_obs.values,
         "sum_on_day_reports": day_sum.values,
     }).iloc[1:]  # first week has no previous value
+    # A week that ends after the last real bulletin is not a week of data: its "cases" would just be the
+    # cumulative carried forward (a spurious near-zero). Keep only weeks that end on or before the last observation.
+    out = out[out["week_end"] <= obs["date"].max()]
     out["quality"] = np.select([out["n_obs"] >= 3, out["n_obs"] >= 1], ["ok", "partial"], default="interpolated")
     out["area"] = area
 

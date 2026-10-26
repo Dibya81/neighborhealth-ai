@@ -36,9 +36,6 @@ jobs:
           if [ -f data/v2/models/registry.json ]; then python -m ml gate; else echo "No registry in this checkout; skipping gate."; fi
 
   web:
-    # Not blocking yet: the web app has never been built, so a red result here must not mask the Python results.
-    # Remove continue-on-error once `npm run build` passes.
-    continue-on-error: true
     runs-on: ubuntu-latest
     defaults: { run: { working-directory: apps/web } }
     steps:

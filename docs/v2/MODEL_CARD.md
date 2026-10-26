@@ -4,7 +4,7 @@
 
 **Evaluation:** rolling-origin backtest (train on weeks ≤ t, predict t+h, slide forward 1 week). Intervals are online conformal, using only residuals already observable at each origin.
 
-**Champion:** `gbm` (version `20261026-083600-gbm`, data 2021-10-10 → 2024-11-10, 162 weeks)
+**Champion:** `gbm` (version `20261026-131436-gbm`, data 2021-10-10 → 2024-11-03, 161 weeks)
 
 ```json
 {
@@ -52,6 +52,7 @@ Skill = 1 − MAE / MAE(seasonal naive). Positive means better than the baseline
 
 - 2026-10-26T08:34:07 `20261026-083407-ensemble`: rejected (does not beat seasonal naive (skill -0.002))
 - 2026-10-26T08:36:00 `20261026-083600-gbm`: PROMOTED (first model to pass the quality gate)
+- 2026-10-26T13:14:36 `20261026-131436-gbm`: PROMOTED (wis: candidate 199.65 vs champion gbm 199.65 on the same backtest)
 
 ## Limitations
 

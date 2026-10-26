@@ -41,7 +41,7 @@ ICTS archive (606 PDFs, 2021-09 to 2024-11)          NASA POWER weather        C
         │                    │                         │
    SQLite / Postgres   Redis Streams → worker → email / SMS / WhatsApp
         │
- apps/web (Next.js)  residents + health team   ← written, not yet built or reviewed
+ apps/web (Next.js)  residents + health team
 ```
 
 ## 4. Key decisions and the reasons behind them
@@ -70,7 +70,7 @@ Rolling-origin backtest (train on weeks ≤ t, forecast t+h), baselines (persist
 only from residuals observable at each origin, WIS and interval coverage. The promotion gate requires beating seasonal naive
 on MAE averaged over horizons and 80% coverage in 0.65–0.95. **Result:** the ensemble beats the baseline at 1 week (about 14% lower MAE)
 and not at 3–4 weeks; the averaged skill sits within ±0.01 of zero, so whether a model is "promoted" depends on how often models are refit.
-That is a finding about the amount of data (162 weeks), not something to tune away.
+That is a finding about the amount of data (161 weeks), not something to tune away.
 
 ### 4.5 Ward risk is an allocation, not a measurement
 Cases are only reported for BBMP as a whole. Ward numbers split the city forecast by estimated population and risk factors,
@@ -114,7 +114,7 @@ open field tasks (unlinked from the person) and attributes official audit entrie
 ## 6. Known gaps
 
 - **Data ends 2024-11-04.** Nothing live can be promised until a fresh source exists (the Ministry's annual state table is a validation source, not a weekly one).
-- Web app: never built or reviewed; Kannada/Hindi text needs native review (`docs/v2/TRANSLATION_REVIEW.md`).
+- No automated UI tests; Kannada/Hindi text needs native review (`docs/v2/TRANSLATION_REVIEW.md`), and new interface strings are English until reviewed.
 - Photo check is off by default (`VISION_ENABLED=false`); no automatic face/number-plate blurring.
 - Retrieval is keyword-only; non-English questions need an LLM key to be translated for search.
 - Rate limiting is per-process; token is stored in `localStorage` rather than an httpOnly cookie.

@@ -2,38 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Design tokens. Space-separated RGB so Tailwind can apply alpha.
+   One accent (lake) is used for actions and links only. The risk ramp is reserved for data. */
 :root {
-  --paper: 244 247 246;      /* rain paper */
+  --paper: 247 248 248;
   --surface: 255 255 255;
-  --ink: 20 33 61;           /* monsoon ink #14213D */
-  --muted: 90 104 128;
-  --line: 214 222 220;
-  --lake: 14 124 123;        /* lake teal #0E7C7B */
-  --lake-soft: 220 238 236;
+  --sunken: 240 243 244;      /* quiet fills: table headers, inputs at rest */
+  --ink: 14 26 43;
+  --muted: 82 96 120;
+  --line: 227 231 235;
+  --line-strong: 203 210 218;
+  --lake: 11 107 104;         /* actions, links, focus */
+  --lake-soft: 226 241 240;
+  --warn-bg: 252 244 222;
+  --warn-line: 233 200 119;
+  --warn-ink: 92 66 8;
   color-scheme: light;
 }
 
 .dark {
-  --paper: 13 22 38;
-  --surface: 21 33 54;
-  --ink: 233 239 245;
-  --muted: 150 165 185;
-  --line: 44 60 86;
-  --lake: 64 186 180;
-  --lake-soft: 22 58 66;
+  --paper: 11 18 30;
+  --surface: 17 27 44;
+  --sunken: 22 34 54;
+  --ink: 232 237 243;
+  --muted: 148 163 184;
+  --line: 36 49 70;
+  --line-strong: 56 72 98;
+  --lake: 86 200 194;
+  --lake-soft: 20 52 58;
+  --warn-bg: 52 40 12;
+  --warn-line: 120 92 28;
+  --warn-ink: 246 220 150;
   color-scheme: dark;
 }
 
 @layer base {
-  html { -webkit-text-size-adjust: 100%; }
+  html { -webkit-text-size-adjust: 100%; scroll-padding-top: 5rem; }
   body {
     @apply bg-paper text-ink antialiased;
-    font-feature-settings: "kern", "liga";
+    font-feature-settings: "kern", "liga", "calt";
+    text-rendering: optimizeLegibility;
   }
+  h1, h2, h3 { @apply font-sans font-semibold tracking-tight text-ink; }
   :focus-visible {
     outline: 2px solid rgb(var(--lake));
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: 6px;
   }
   ::selection { background: rgb(var(--lake) / 0.2); }
 }
@@ -41,7 +55,10 @@
 @layer utilities {
   .tnum { font-variant-numeric: tabular-nums; }
   .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
   .scrollbar-thin { scrollbar-width: thin; }
+  /* Numbers read best in the condensed cut with tabular figures. */
+  .num { font-family: var(--font-plex-condensed), var(--font-plex), system-ui, sans-serif; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -54,7 +71,7 @@
 }
 
 /* MapLibre controls in the app's palette */
-.maplibregl-ctrl-group { border-radius: 10px !important; box-shadow: none !important; border: 1px solid rgb(var(--line)); }
-.maplibregl-ctrl-attrib { font-size: 11px; }
-.dark .maplibregl-ctrl-group { background: rgb(var(--surface)); }
+.maplibregl-ctrl-group { border-radius: 8px !important; box-shadow: none !important; border: 1px solid rgb(var(--line-strong)); background: rgb(var(--surface)) !important; }
+.maplibregl-ctrl-attrib { font-size: 11px; background: rgb(var(--surface) / 0.85) !important; }
 .dark .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }
+.dark .maplibregl-ctrl-attrib a { color: rgb(var(--muted)) !important; }

@@ -27,6 +27,7 @@ v2 throws that data away and starts from real surveillance data, with a pipeline
 
 - **No synthetic data.** v1's synthetic files are not read or committed. Only real inputs are tracked (bulletins, NASA POWER weather, Census 2011 wards).
 - **Leakage-free evaluation.** Rolling-origin backtests, features built only from information available at the forecast date, intervals built only from past errors.
+- **v1 is preserved.** The original README, with its live demo link, is kept at [docs/v1/README.md](docs/v1/README.md); the v1 code stays in `backend/` and `frontend/` for reference.
 - **Honest claims.** Every number in this README comes from a check you can re-run; results that are unflattering are reported as such.
 
 ## Project status
@@ -39,8 +40,8 @@ v2 throws that data away and starts from real surveillance data, with a pipeline
 | Assistant (guideline retrieval, safety paths) | **Working, keyword-only** | Eval set: recall@3 0.96 (tuned) / 0.5 (held-out), 9/9 out-of-scope refused |
 | Alerts (engine, worker, opt-out) | **Working in dry-run** | Delivered in en/kn/hi to the dry-run outbox; STOP and unsubscribe link verified |
 | Container image (API) | **Builds and runs** | `docker build` + weekly loop + server start verified |
-| CI | **Lint and tests pass on a clean checkout** (31 passed, 8 skipped by design) | Web job is non-blocking |
-| Web app (Next.js) | **Written, never built or reviewed** | UI pass pending |
+| CI | **Lint and tests pass on a clean checkout** (32 passed, 8 skipped by design); web build passes locally | Not yet run on GitHub |
+| Web app (Next.js) | **Redesigned; production build passes** | All 12 pages checked in a browser at desktop and phone width, light and dark, against the live API. No automated UI tests yet |
 | Kannada / Hindi text | **Needs native-speaker review** | [Review sheet](docs/v2/TRANSLATION_REVIEW.md) |
 | Live data, deployment, pilot | **Not started** | Needs a data source and your accounts: [Deploy guide](docs/v2/DEPLOY.md) |
 
@@ -54,7 +55,7 @@ v2 throws that data away and starts from real surveillance data, with a pipeline
 | Text bulletins whose 30+ district rows sum **exactly** to the printed state total | **374 of 379 (98.7%)** |
 | Scanned bulletins (Oct 2023 on) with a BBMP value read by OCR and arithmetic-checked | 129 of 165; most of the rest are genuinely blank rows |
 | Rebuilt Karnataka totals vs the Ministry's separate annual table | 2021: 100% · 2022: 98% · 2024 (to 4 Nov): 95% · **2023: 87%** (see data card) |
-| Weekly BBMP series | 162 weeks (2021-10 → 2024-11); 113 backed by ≥3 real bulletins; Apr–May 2023 is a gap in the archive itself |
+| Weekly BBMP series | 161 weeks (2021-10 → 2024-11-03); 113 backed by ≥3 real bulletins; Apr–May 2023 is a gap in the archive itself |
 
 ### Forecast skill (rolling backtest, scored only on weeks with real observations; 48 weeks)
 
@@ -66,7 +67,7 @@ v2 throws that data away and starts from real surveillance data, with a pipeline
 | 4 weeks | 258 | 241 | −7.2% | 0.87 |
 
 The model helps one week ahead and not beyond. Averaged over horizons the skill is within ±0.01 of zero, so whether the quality gate promotes a
-model depends on how often models are refit. With only 162 weeks of real data this is a finding about the data, not a bug. Intervals are roughly calibrated
+model depends on how often models are refit. With only 161 weeks of real data this is a finding about the data, not a bug. Intervals are roughly calibrated
 but wide (for example roughly 3–756 reported cases for the next week at 80%).
 
 ## Architecture
@@ -96,7 +97,7 @@ Design rationale, the decisions behind each box, and the interface design are in
 pipeline/        Step 1: download, parse (text + OCR), validate, reconcile, weekly series, evaluation
 ml/              Step 2: features, models, backtest, intervals, SHAP, ward allocation, registry, drift, model card
 apps/api/        FastAPI app: reports, officials, alerts, assistant, privacy, pilot (+ tests, scripts)
-apps/web/        Next.js app (not yet built/reviewed)
+apps/web/        Next.js app: 12 pages, light and dark, English with Kannada and Hindi fallbacks
 config/          City config (bengaluru.yaml) and official guideline sources
 data/v2/         processed/ (real weekly series, committed) · interim/extracted_rule.jsonl (committed) · raw, models, indexes (rebuilt, git-ignored)
 docs/v2/         Data card, model card, data story, pilot playbook, deploy guide, translation review, legal drafts
@@ -162,12 +163,14 @@ make test        # pipeline + ML + API  (~40 s)
 make lint
 ```
 
-### 6. Web app (pending UI pass)
+### 6. Web app
 
 ```bash
-cd apps/web && npm install && npm run typecheck && npm run build
+cd apps/web && npm install
+NEXT_PUBLIC_API_URL=http://localhost:8000 npx next dev -p 3100   # http://localhost:3100
+npm run typecheck && npm run build
 ```
-Expect first-run fixes: the app has never been built.
+Set `ALLOWED_ORIGINS` on the API to the web address (for example `http://localhost:3100`).
 
 ## API overview
 
@@ -256,14 +259,14 @@ See **[docs/v2/DEPLOY.md](docs/v2/DEPLOY.md)**: components, environment, first-s
 
 **Known limitations**
 - Data ends 2024-11-04; the 2023 bulletin totals are about 13% below the Ministry's annual figure.
-- 162 weeks is little history; forecasts beat the baseline only one week ahead.
+- 161 weeks is little history; forecasts beat the baseline only one week ahead.
 - Ward values are allocations, and 2011 population is an approximation.
 - Keyword-only retrieval in the assistant; held-out recall is about 50%.
-- Web app unbuilt; Kannada/Hindi unreviewed; no automatic photo blurring; per-process rate limiting; token in `localStorage`.
+- No automated UI tests; Kannada/Hindi unreviewed; no automatic photo blurring; per-process rate limiting; token in `localStorage`.
 
 **Next**
 1. A live data source (district/state weekly reports such as IDSP, or a new ICTS feed) so forecasts and alerts can be current.
-2. Web UI pass: build, fix, review on phone width and in dark mode.
+2. Automated UI tests (Playwright) and a real-user usability check of the report and alert flows.
 3. Embeddings + reranker for the assistant and a larger evaluation set.
 4. Probabilistic outbreak alerts (P(next week > seasonal 75th percentile)) scored with the Brier score.
 5. Deploy, privacy review, and a small pilot with one RWA or NSS unit ([playbook](docs/v2/PILOT_PLAYBOOK.md)).

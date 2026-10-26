@@ -43,26 +43,35 @@
 .fab {
   position: relative;
   width: 44px; height: 44px; border-radius: 50%;
-  background: var(--surface); border: 1px solid var(--border);
-  backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+  background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   display: flex; align-items: center; justify-content: center;
-  color: var(--text-secondary);
-  transition: border-color var(--dur-fast), color var(--dur-fast), transform var(--dur-fast);
-  box-shadow: var(--shadow);
+  color: var(--text-primary, #f2f1ee);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 .fab-label {
-  position: absolute; right: 54px; top: 50%; transform: translateY(-50%) translateX(10px);
+  position: absolute; right: 54px; top: 50%; transform: translateY(-50%) translateX(8px);
   padding: 6px 12px; border-radius: 8px;
-  background: var(--surface-solid); border: 1px solid var(--border);
-  color: var(--text-primary); font-size: 12px; font-weight: 500;
+  background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff; font-size: 12px; font-weight: 500; letter-spacing: 0.01em;
   white-space: nowrap; opacity: 0; pointer-events: none;
-  transition: opacity var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-out);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
   z-index: 1000;
 }
-.fab:hover { border-color: var(--border-hover); color: var(--text-primary); z-index: 1001; }
+.fab:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(30, 41, 59, 0.95);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+}
 .fab:hover .fab-label { opacity: 1; transform: translateY(-50%) translateX(0); }
-.fab:active { transform: scale(0.94); }
+.fab:active { transform: translateY(0) scale(0.95); }
 .fab.active { color: var(--risk-high); border-color: var(--risk-high); }
 
 /* ── Legend ────────────────────────────────────── */

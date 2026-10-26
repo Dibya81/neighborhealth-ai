@@ -160,4 +160,3 @@ week_end,tests,global_cum,n_obs,sum_on_day_reports,quality,area
 2024-10-20,1600.3,124928.0,3,659.0,ok,BBMP
 2024-10-27,1060.5,125988.5,0,,interpolated,BBMP
 2024-11-03,881.7,126870.2,1,162.0,partial,BBMP
-2024-11-10,106.8,126977.0,1,82.0,partial,BBMP

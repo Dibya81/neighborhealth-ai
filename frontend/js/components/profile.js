@@ -128,6 +128,16 @@ const profileComponent = {
         window.location.href = 'login.html';
     },
 
+    _escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    },
+
     _renderHistory(items) {
         const container = document.getElementById('prof-history-list');
         if (!container) return;
@@ -137,16 +147,17 @@ const profileComponent = {
             : items.map(item => `
                 <div style="padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;background:rgba(255,255,255,0.02);">
                   <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">
-                    ${new Date(item.created_at).toLocaleString('en-IN')} · Ward ${item.ward_id} · ${item.disease_id}
+                    ${this._escapeHtml(new Date(item.created_at).toLocaleString('en-IN'))} · Ward ${this._escapeHtml(item.ward_id)} · ${this._escapeHtml(item.disease_id)}
                   </div>
                   <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;font-weight:500;border-left:2px solid var(--teal);padding-left:8px;">
-                    "${item.message}"
+                    "${this._escapeHtml(item.message)}"
                   </div>
-                  <div style="font-size:13px;color:var(--text-primary);line-height:1.6;background:rgba(0,0,0,0.2);padding:10px;border-radius:6px;">
-                    ${item.response}
+                  <div style="font-size:13px;color:var(--text-primary);line-height:1.6;background:rgba(0,0,0,0.2);padding:10px;border-radius:6px;white-space:pre-wrap;">
+                    ${this._escapeHtml(item.response)}
                   </div>
                 </div>`).join('');
     }
+
 };
 
 // Initialize when DOM is ready

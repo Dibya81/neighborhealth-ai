@@ -34,6 +34,13 @@ def upsert_subscription(ward_id: str, contact: str, contact_type: str,
     return result.data[0]
 
 
+def get_subscription_by_id(subscription_id: str) -> Optional[dict]:
+    """Retrieves a single subscription by ID or None."""
+    sb = get_supabase()
+    result = sb.table("subscriptions").select("*").eq("id", subscription_id).limit(1).execute()
+    return result.data[0] if result.data else None
+
+
 def cancel_subscription(subscription_id: str) -> Optional[dict]:
     """Soft-delete: sets active=False. Returns updated row or None."""
     sb = get_supabase()
@@ -44,6 +51,7 @@ def cancel_subscription(subscription_id: str) -> Optional[dict]:
         .execute()
     )
     return result.data[0] if result.data else None
+
 
 
 def get_active_subscriptions_for_wards(ward_ids: list[str]) -> list[dict]:

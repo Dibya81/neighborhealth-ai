@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict, Field
 from typing import Optional, List, Any
 from uuid import UUID
 from datetime import datetime
@@ -24,8 +24,10 @@ class UserCreate(UserBase):
 
 class UserResponse(UserBase):
     id: UUID
-    created_at: datetime
+    created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
     saved_locations: Optional[Any] = [] # Handle as JSONB
+    token: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+

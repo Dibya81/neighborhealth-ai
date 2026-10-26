@@ -21,7 +21,11 @@ def insert_report(ward_id: str, lat: float, lng: float,
         "status": "pending",
     }
     result = sb.table("breeding_reports").insert(payload).execute()
+    if not result.data:
+        logger.error("Failed to insert report: %s", result)
+        raise Exception("Database failed to insert breeding report")
     return result.data[0]
+
 
 
 def get_reports_for_ward(ward_id: str, days: int = 7) -> list:

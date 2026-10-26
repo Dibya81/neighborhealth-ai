@@ -160,4 +160,3 @@ week_end,cases,global_cum,n_obs,sum_on_day_reports,quality,area
 2024-10-20,248.5,26759.666666666668,3,107.0,ok,BBMP
 2024-10-27,138.8,26898.5,0,,interpolated,BBMP
 2024-11-03,118.7,27017.2,1,21.0,partial,BBMP
-2024-11-10,14.8,27032.0,1,14.0,partial,BBMP

@@ -70,16 +70,16 @@ export function WardSearch({ autoFocus = false, className }: { autoFocus?: boole
               if (e.key === "Enter" && results[active]) go(results[active]);
             }}
             placeholder={t("home.searchPlaceholder")}
-            className="h-12 w-full rounded border border-line bg-surface pl-10 pr-3 text-base shadow-sm placeholder:text-muted/80 focus:border-lake focus:outline-none"
+            className="h-12 w-full rounded border border-line-strong bg-surface pl-10 pr-3 text-base placeholder:text-muted/70 transition-colors hover:border-ink/40 focus:border-lake focus:outline-none focus:ring-2 focus:ring-lake/20"
           />
         </div>
         <button onClick={locate} disabled={locating} aria-label={t("home.useLocation")} title={t("home.useLocation")}
-          className="grid h-12 w-12 shrink-0 place-items-center rounded border border-line bg-surface text-ink hover:border-ink/30 disabled:opacity-60">
+          className="grid h-12 w-12 shrink-0 place-items-center rounded border border-line-strong bg-surface text-ink transition-colors hover:border-ink/40 disabled:opacity-60">
           <LocateFixed className={cn("h-5 w-5", locating && "animate-pulse")} />
         </button>
       </div>
       {results.length > 0 && (
-        <ul id={listId} role="listbox" className="absolute inset-x-0 top-[52px] z-20 overflow-hidden rounded border border-line bg-surface shadow-float">
+        <ul id={listId} role="listbox" className="absolute inset-x-0 top-[54px] z-20 overflow-hidden rounded-lg border border-line-strong bg-surface shadow-float">
           {results.map((w, i) => (
             <li key={w.ward_id} role="option" aria-selected={i === active}>
               <button onMouseEnter={() => setActive(i)} onClick={() => go(w)}
