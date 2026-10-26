@@ -1,0 +1,60 @@
+{
+  "candidate": "20261026-083600-gbm",
+  "decision": {
+    "candidate": "20261026-083600-gbm",
+    "at": "2026-10-26T08:36:00.064283+00:00",
+    "promoted": true,
+    "reason": "first model to pass the quality gate"
+  },
+  "published": {
+    "origin_week": "2024-11-10",
+    "model": "gbm",
+    "forecast": [
+      {
+        "horizon": 1,
+        "week_end": "2024-11-17",
+        "median": 135.2,
+        "lo50": 6.4,
+        "hi50": 394.3,
+        "lo80": 2.8,
+        "hi80": 755.9,
+        "lo95": 0.3,
+        "hi95": 1979.8
+      },
+      {
+        "horizon": 2,
+        "week_end": "2024-11-24",
+        "median": 111.6,
+        "lo50": 4.2,
+        "hi50": 383.1,
+        "lo80": 1.5,
+        "hi80": 993.1,
+        "lo95": 0.4,
+        "hi95": 1728.9
+      },
+      {
+        "horizon": 3,
+        "week_end": "2024-12-01",
+        "median": 165.9,
+        "lo50": 8.8,
+        "hi50": 829.4,
+        "lo80": 2.5,
+        "hi80": 1768.6,
+        "lo95": 1.4,
+        "hi95": 3211.0
+      },
+      {
+        "horizon": 4,
+        "week_end": "2024-12-08",
+        "median": 212.0,
+        "lo50": 11.6,
+        "hi50": 1002.2,
+        "lo80": 5.4,
+        "hi80": 1969.5,
+        "lo95": 2.5,
+        "hi95": 2627.0
+      }
+    ],
+    "drift": "drift"
+  }
+}
