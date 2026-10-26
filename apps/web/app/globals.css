@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: 244 247 246;      /* rain paper */
+  --surface: 255 255 255;
+  --ink: 20 33 61;           /* monsoon ink #14213D */
+  --muted: 90 104 128;
+  --line: 214 222 220;
+  --lake: 14 124 123;        /* lake teal #0E7C7B */
+  --lake-soft: 220 238 236;
+  color-scheme: light;
+}
+
+.dark {
+  --paper: 13 22 38;
+  --surface: 21 33 54;
+  --ink: 233 239 245;
+  --muted: 150 165 185;
+  --line: 44 60 86;
+  --lake: 64 186 180;
+  --lake-soft: 22 58 66;
+  color-scheme: dark;
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-paper text-ink antialiased;
+    font-feature-settings: "kern", "liga";
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--lake));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection { background: rgb(var(--lake) / 0.2); }
+}
+
+@layer utilities {
+  .tnum { font-variant-numeric: tabular-nums; }
+  .text-balance { text-wrap: balance; }
+  .scrollbar-thin { scrollbar-width: thin; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* MapLibre controls in the app's palette */
+.maplibregl-ctrl-group { border-radius: 10px !important; box-shadow: none !important; border: 1px solid rgb(var(--line)); }
+.maplibregl-ctrl-attrib { font-size: 11px; }
+.dark .maplibregl-ctrl-group { background: rgb(var(--surface)); }
+.dark .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1); }

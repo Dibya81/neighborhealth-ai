@@ -1,0 +1,163 @@
+"use client";
+
+import { Camera, CheckCircle2, ImagePlus } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
+
+import type { PickedLocation } from "@/components/map/location-picker";
+import { useApp } from "@/components/providers";
+import { RequireAuth } from "@/components/require-auth";
+import { Button, Field, PageHeader, Skeleton, Textarea } from "@/components/ui/primitives";
+import { api, track, useApi } from "@/lib/api";
+import { cn, timeAgo } from "@/lib/format";
+
+const LocationPicker = dynamic(() => import("@/components/map/location-picker"), { ssr: false, loading: () => <Skeleton className="h-[260px]" /> });
+
+const CATEGORIES = [
+  { value: "container", label: "Bucket, drum or container" },
+  { value: "tyre", label: "Old tyres" },
+  { value: "drain", label: "Blocked drain" },
+  { value: "construction", label: "Construction site" },
+  { value: "garbage", label: "Garbage holding water" },
+  { value: "other", label: "Something else" },
+];
+
+const STATUS_COPY: Record<string, string> = {
+  pending: "Waiting for review",
+  verified: "Confirmed by the health team",
+  rejected: "Not a breeding spot",
+  duplicate: "Already reported by someone",
+  spam: "Not accepted",
+};
+
+interface MyReport { id: string; ward_id: string | null; category: string; status: string; created_at: string }
+
+function ReportForm() {
+  const { t } = useApp();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [loc, setLoc] = useState<PickedLocation | null>(null);
+  const [category, setCategory] = useState("container");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState<{ message: string } | null>(null);
+  const mine = useApi<{ reports: MyReport[]; trust: { score: number; verified: number } }>("/v2/reports/mine");
+
+  const pick = (f: File | undefined) => {
+    if (!f) return;
+    if (!f.type.startsWith("image/")) return toast.error("Please choose a photo.");
+    setPhoto(f);
+    setPreview(URL.createObjectURL(f));
+    track("report_started");
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!photo) return toast.error("Add a photo of the spot.");
+    if (!loc) return toast.error("Choose where the spot is.");
+    setBusy(true);
+    const fd = new FormData();
+    fd.append("lat", String(loc.lat));
+    fd.append("lon", String(loc.lon));
+    fd.append("category", category);
+    if (notes) fd.append("description", notes);
+    fd.append("photo", photo);
+    try {
+      const r = await api<{ message: string; status: string }>("/v2/reports", { method: "POST", body: fd });
+      setDone({ message: r.message });
+      track("report_submitted", { ward_id: loc.ward_id ?? "" });
+      mine.mutate();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (done) {
+    return (
+      <div className="rounded-lg border border-line bg-surface p-8 text-center">
+        <CheckCircle2 className="mx-auto h-10 w-10 text-lake" />
+        <h2 className="mt-4 font-display text-2xl font-semibold">{t("report.sent")}</h2>
+        <p className="mx-auto mt-2 max-w-md text-muted">{done.message}</p>
+        <Button className="mt-6" variant="secondary" onClick={() => { setDone(null); setPhoto(null); setPreview(null); setNotes(""); }}>Report another spot</Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+      <form onSubmit={submit} className="space-y-7">
+        <Field label={t("report.photo")}>
+          <input ref={fileRef} type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => pick(e.target.files?.[0])} />
+          <button type="button" onClick={() => fileRef.current?.click()}
+            className={cn("relative grid w-full place-items-center overflow-hidden rounded border-2 border-dashed border-line bg-surface text-muted transition-colors hover:border-lake hover:text-ink",
+              preview ? "h-72" : "h-44")}>
+            {preview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={preview} alt="Selected photo" className="absolute inset-0 h-full w-full object-cover" />
+            ) : (
+              <span className="flex flex-col items-center gap-2 text-sm"><Camera className="h-7 w-7" />{t("report.takePhoto")}</span>
+            )}
+            {preview && <span className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded bg-ink/80 px-2.5 py-1 text-xs text-paper"><ImagePlus className="h-3.5 w-3.5" />Change</span>}
+          </button>
+        </Field>
+
+        <Field label={t("report.location")}>
+          <LocationPicker value={loc} onChange={setLoc} autoLocate />
+        </Field>
+
+        <fieldset>
+          <legend className="text-sm font-medium">{t("report.category")}</legend>
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {CATEGORIES.map((c) => (
+              <label key={c.value} className={cn("flex cursor-pointer items-center gap-3 rounded border px-3 py-2.5 text-sm",
+                category === c.value ? "border-lake bg-lake-soft/60" : "border-line bg-surface")}>
+                <input type="radio" name="category" value={c.value} checked={category === c.value} onChange={() => setCategory(c.value)} className="accent-[#0E7C7B]" />
+                {c.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <Field label={t("report.notes")} htmlFor="notes">
+          <Textarea id="notes" maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="e.g. Behind the bus stop, near the school gate" />
+        </Field>
+
+        <Button type="submit" size="lg" loading={busy} className="w-full sm:w-auto">{t("report.submit")}</Button>
+        <p className="text-xs text-muted">The photo&apos;s hidden location data is removed before saving. On the public map, report locations are shown to about 100 m.</p>
+      </form>
+
+      <aside>
+        <h2 className="text-sm font-medium">{t("report.mine")}</h2>
+        {mine.data && mine.data.trust.verified > 0 && (
+          <p className="mt-1 text-xs text-muted">{mine.data.trust.verified} of your reports were confirmed. Thank you!</p>
+        )}
+        {!mine.data ? <Skeleton className="mt-3 h-32" /> : mine.data.reports.length === 0 ? (
+          <p className="mt-3 text-sm text-muted">Reports you send will appear here with their review status.</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-line rounded border border-line bg-surface">
+            {mine.data.reports.slice(0, 12).map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                <span>{CATEGORIES.find((c) => c.value === r.category)?.label ?? r.category}<span className="block text-xs text-muted">{timeAgo(r.created_at)}</span></span>
+                <span className={cn("text-xs", r.status === "verified" ? "text-lake" : "text-muted")}>{STATUS_COPY[r.status] ?? r.status}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </aside>
+    </div>
+  );
+}
+
+export default function ReportPage() {
+  const { t } = useApp();
+  return (
+    <div className="mx-auto max-w-[1100px] px-4 py-8 md:px-6 md:py-12">
+      <PageHeader title={t("report.title")} lede={t("report.lede")} />
+      <RequireAuth reason="Reports are linked to an account so the health team can trust them and you can follow their status."><ReportForm /></RequireAuth>
+    </div>
+  );
+}
